@@ -58,12 +58,26 @@ const IDCardFront = ({ employee, customPhoto, cardRef }) => {
             {/* Photo wrap (or solid gray fill when empty) */}
             <div className={`idc__photo-wrap ${!hasValidPhoto ? 'idc__photo-wrap--empty' : ''}`}>
                 {hasValidPhoto ? (
-                    <img
-                        src={profileSrc}
-                        alt={displayName}
-                        className="idc__photo-img"
-                        onError={() => setImgError(true)}
-                    />
+                    <>
+                        <img 
+                            src={profileSrc} 
+                            style={{ display: 'none' }} 
+                            onError={() => setImgError(true)} 
+                            alt="" 
+                        />
+                        <div
+                            className="idc__photo-img"
+                            style={{
+                                backgroundImage: `url(${profileSrc})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center top',
+                                backgroundRepeat: 'no-repeat',
+                                width: '100%',
+                                height: '100%'
+                            }}
+                            title={displayName}
+                        />
+                    </>
                 ) : (
                     <div className="idc__photo-placeholder idc__photo-placeholder--gray" />
                 )}
