@@ -1,5 +1,5 @@
 import React from 'react';
-import hareTurtleLogoFigma from '../../../assets/hare_turtle_logo_figma.png';
+import hareTurtleLogoFigma from '../../../assets/logo-svg.svg';
 import { formatProfileImage } from '../../../utils/imageUtils';
 import './IDCard.css';
 
@@ -19,11 +19,19 @@ import './IDCard.css';
  *   - Footer:
  *       Velocity X Innovation | hareandturtle.ai at y=509..520
  */
-const IDCardFront = ({ employee, customPhoto, cardRef }) => {
+const IDCardFront = ({
+    employee,
+    customPhoto,
+    processedPhoto,
+    isProcessingPhoto,
+    cardRef,
+}) => {
     const [imgError, setImgError] = React.useState(false);
 
     let profileSrc = null;
-    if (customPhoto) {
+    if (processedPhoto) {
+        profileSrc = processedPhoto;
+    } else if (customPhoto) {
         profileSrc = customPhoto;
     } else if (employee?.profilePicture) {
         profileSrc = formatProfileImage(employee.profilePicture);
@@ -56,28 +64,26 @@ const IDCardFront = ({ employee, customPhoto, cardRef }) => {
             <div className="geo geo--orange" />
 
             {/* Photo wrap (or solid gray fill when empty) */}
-            <div className={`idc__photo-wrap ${!hasValidPhoto ? 'idc__photo-wrap--empty' : ''}`}>
+            <div className={`idc__photo-wrap ${!hasValidPhoto && !isProcessingPhoto ? 'idc__photo-wrap--empty' : ''}`}>
                 {hasValidPhoto ? (
                     <>
-                        <img 
-                            src={profileSrc} 
-                            style={{ display: 'none' }} 
-                            onError={() => setImgError(true)} 
-                            alt="" 
-                        />
-                        <div
+                        <img
+                            src={profileSrc}
+                            alt={displayName}
                             className="idc__photo-img"
-                            style={{
-                                backgroundImage: `url(${profileSrc})`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center top',
-                                backgroundRepeat: 'no-repeat',
-                                width: '100%',
-                                height: '100%'
-                            }}
-                            title={displayName}
+                            onError={() => setImgError(true)}
+                            crossOrigin="anonymous"
                         />
+                        {isProcessingPhoto && (
+                            <div className="idc__photo-processing">
+                                <span className="idc__photo-spinner" />
+                            </div>
+                        )}
                     </>
+                ) : isProcessingPhoto ? (
+                    <div className="idc__photo-processing">
+                        <span className="idc__photo-spinner" />
+                    </div>
                 ) : (
                     <div className="idc__photo-placeholder idc__photo-placeholder--gray" />
                 )}

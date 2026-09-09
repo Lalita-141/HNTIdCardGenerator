@@ -5,7 +5,12 @@ import IDCardFront from './IDCardFront';
 import IDCardBack from './IDCardBack';
 import './IDCardPreviewPanel.css';
 
-const IDCardPreviewPanel = ({ employee, customPhoto }) => {
+const IDCardPreviewPanel = ({
+    employee,
+    customPhoto,
+    processedPhoto,
+    isProcessingPhoto,
+}) => {
     const frontRef = useRef(null);
     const backRef = useRef(null);
     const [downloading, setDownloading] = useState(false);
@@ -153,7 +158,13 @@ const IDCardPreviewPanel = ({ employee, customPhoto }) => {
             <div className="ipp__cards-row">
                 {/* Front */}
                 <div className="ipp__card-col">
-                    <IDCardFront employee={employee} customPhoto={customPhoto} cardRef={frontRef} />
+                    <IDCardFront
+                        employee={employee}
+                        customPhoto={customPhoto}
+                        processedPhoto={processedPhoto}
+                        isProcessingPhoto={isProcessingPhoto}
+                        cardRef={frontRef}
+                    />
                     <span className="ipp__card-label">Front Side</span>
                 </div>
 

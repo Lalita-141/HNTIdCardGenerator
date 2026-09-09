@@ -12,6 +12,8 @@ const EmployeeFormPanel = ({
     onGenerate,
     customPhoto,
     onPhotoUpload,
+    processedPhoto,
+    isProcessingPhoto: _isProcessingPhoto,
 }) => {
     const fileInputRef = useRef(null);
     const [avatarError, setAvatarError] = useState(false);
@@ -28,9 +30,10 @@ const EmployeeFormPanel = ({
         if (e.key === 'Enter') onGenerate();
     };
 
-    const photoSrc = customPhoto
+    const rawPhotoSrc = customPhoto
         ? customPhoto
         : formatProfileImage(employee?.profilePicture);
+    const photoSrc = processedPhoto || rawPhotoSrc;
 
     useEffect(() => {
         setAvatarError(false);
@@ -156,7 +159,7 @@ const EmployeeFormPanel = ({
                     />
                     {customPhoto ? (
                         <div className="efp__upload-preview">
-                            <img src={customPhoto} alt="Uploaded" className="efp__upload-thumb" />
+                            <img src={processedPhoto || customPhoto} alt="Uploaded" className="efp__upload-thumb" />
                             <span className="efp__upload-change">Click to change photo</span>
                         </div>
                     ) : (

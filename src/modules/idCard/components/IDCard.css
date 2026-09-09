@@ -93,6 +93,33 @@
     background: #C8EEC7;
 }
 
+/* Processing spinner on ID card photo */
+.idc__photo-processing {
+    position: absolute;
+    inset: 0;
+    background: rgba(200, 238, 199, 0.7);
+    backdrop-filter: blur(1.5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+}
+
+.idc__photo-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(24, 143, 22, 0.25);
+    border-top-color: #188F16;
+    border-radius: 50%;
+    animation: idcSpin 0.75s linear infinite;
+}
+
+@keyframes idcSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* Royal blue accent block (x=265, y=349, w=56, h=60) — positioned behind gradient column */
 .geo--blue-sm {
     top: 327px;
@@ -138,7 +165,7 @@
 
 .idc__name {
     font-size: 22px;
-    font-weight: 800;
+    font-weight: 700;
     color: #000000;
     margin: 0;
     line-height: 1.15;
@@ -158,15 +185,15 @@
 
 .idc__staff-id {
     font-size: 18px;
-    font-weight: 700;
-    color: #374151;
+    font-weight: 600;
+    color: #5D5D5D;
     letter-spacing: 0.2px;
 }
 
 .idc__blood {
     font-size: 18px;
-    font-weight: 700;
-    color: #374151;
+    font-weight: 600;
+    color: #5D5D5D;
 }
 
 /* --- Footer (y=509..520, left=25, right=25) --- */
@@ -182,8 +209,8 @@
 }
 
 .idc__footer span {
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 600;
     color: #188F16;
     letter-spacing: 0.1px;
     text-transform: none;
@@ -193,9 +220,10 @@
    BACK CARD — 1:1 Exact Figma Match
    =================================================== */
 .idc--back {
-    background: #fbfbfb;
+    background: #ffffff;
     position: relative;
     overflow: hidden;
+    border: 1px solid #f3f0f0;
 }
 
 /* Gradient border wrapper (orange to green) */
@@ -232,7 +260,7 @@
 }
 
 .idc-back__return-label {
-    font-size: 13px;
+    font-size: 14px;
     font-style: italic;
     font-weight: 700;
     color: #188F16;
@@ -252,10 +280,10 @@
 }
 
 .idc-back__detail span {
-    font-size: 12.5px;
+    font-size: 13.5px;
     color: #374151;
     line-height: 1.45;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* Bottom centered logo (no top divider border) */
