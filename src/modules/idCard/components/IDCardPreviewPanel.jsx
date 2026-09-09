@@ -1,9 +1,45 @@
 import React, { useRef, useState } from 'react';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import IDCardFront from './IDCardFront';
 import IDCardBack from './IDCardBack';
 import './IDCardPreviewPanel.css';
+
+function triggerDownload(dataUrl, filename) {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+/**
+ * Clips canvas to exact card rounded corners (border-radius: 16px * scale = 48px)
+ * leaving corners transparent so no extra white box or square corners exist.
+ */
+function clipToCurvedCard(sourceCanvas, radius = 48) {
+    const w = sourceCanvas.width;
+    const h = sourceCanvas.height;
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = w;
+    outCanvas.height = h;
+    const ctx = outCanvas.getContext('2d');
+
+    ctx.beginPath();
+    if (ctx.roundRect) {
+        ctx.roundRect(0, 0, w, h, radius);
+    } else {
+        ctx.moveTo(radius, 0);
+        ctx.arcTo(w, 0, w, h, radius);
+        ctx.arcTo(w, h, 0, h, radius);
+        ctx.arcTo(0, h, 0, 0, radius);
+        ctx.arcTo(0, 0, w, 0, radius);
+        ctx.closePath();
+    }
+    ctx.clip();
+    ctx.drawImage(sourceCanvas, 0, 0, w, h);
+    return outCanvas;
+}
 
 const IDCardPreviewPanel = ({
     employee,
@@ -15,132 +51,110 @@ const IDCardPreviewPanel = ({
     const backRef = useRef(null);
     const [downloading, setDownloading] = useState(false);
 
-    const downloadFrontPDF = async () => {
+    const downloadFrontPNG = async () => {
         if (!frontRef.current) return;
         setDownloading(true);
         try {
-            const canvas = await html2canvas(frontRef.current, {
-                scale: 3,
+            const scale = 3;
+            const rawCanvas = await html2canvas(frontRef.current, {
+                scale,
                 useCORS: true,
-                backgroundColor: '#ffffff',
+                backgroundColor: null,
                 logging: false,
             });
 
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const pageW = pdf.internal.pageSize.getWidth();
-            const pageH = pdf.internal.pageSize.getHeight();
+            const curvedCanvas = clipToCurvedCard(rawCanvas, 16 * scale);
 
-            // Card ratio: 210 x 336 px → at A4, fit card width to 90mm centered
-            const cardMM_W = 90;
-            const cardMM_H = (canvas.height / canvas.width) * cardMM_W;
-            const x = (pageW - cardMM_W) / 2;
-            const y = (pageH - cardMM_H) / 2;
+            const empName = employee
+                ? `${employee.firstName || ''}_${employee.lastName || ''}_${employee.staffId || ''}`.replace(/\s+/g, '_')
+                : 'Front';
+            const fname = `IDCard_${empName}.png`;
 
-            pdf.setFillColor(248, 250, 248);
-            pdf.rect(0, 0, pageW, pageH, 'F');
-
-            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, cardMM_W, cardMM_H);
-
-            const fname = employee
-                ? `IDCard_${employee.firstName}_${employee.lastName}_${employee.staffId}.pdf`
-                : 'IDCard_Front.pdf';
-            pdf.save(fname);
+            triggerDownload(curvedCanvas.toDataURL('image/png'), fname);
         } catch (err) {
-            console.error('PDF generation failed:', err);
-            alert('Could not generate PDF. Please try again.');
+            console.error('Front PNG generation failed:', err);
+            alert('Could not generate PNG. Please try again.');
         } finally {
             setDownloading(false);
         }
     };
 
-    const downloadBackPDF = async () => {
+    const downloadBackPNG = async () => {
         if (!backRef.current) return;
         setDownloading(true);
         try {
-            const canvas = await html2canvas(backRef.current, {
-                scale: 3,
+            const scale = 3;
+            const rawCanvas = await html2canvas(backRef.current, {
+                scale,
                 useCORS: true,
-                backgroundColor: '#ffffff',
+                backgroundColor: null,
                 logging: false,
             });
 
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const pageW = pdf.internal.pageSize.getWidth();
-            const pageH = pdf.internal.pageSize.getHeight();
+            const curvedCanvas = clipToCurvedCard(rawCanvas, 16 * scale);
 
-            const cardMM_W = 90;
-            const cardMM_H = (canvas.height / canvas.width) * cardMM_W;
-            const x = (pageW - cardMM_W) / 2;
-            const y = (pageH - cardMM_H) / 2;
+            const empName = employee
+                ? `${employee.firstName || ''}_${employee.lastName || ''}_${employee.staffId || ''}`.replace(/\s+/g, '_')
+                : 'Back';
+            const fname = `IDCard_Back_${empName}.png`;
 
-            pdf.setFillColor(248, 250, 248);
-            pdf.rect(0, 0, pageW, pageH, 'F');
-
-            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, cardMM_W, cardMM_H);
-
-            const fname = employee
-                ? `IDCard_Back_${employee.firstName}_${employee.lastName}_${employee.staffId}.pdf`
-                : 'IDCard_Back.pdf';
-            pdf.save(fname);
+            triggerDownload(curvedCanvas.toDataURL('image/png'), fname);
         } catch (err) {
-            console.error('PDF generation failed:', err);
-            alert('Could not generate PDF. Please try again.');
+            console.error('Back PNG generation failed:', err);
+            alert('Could not generate PNG. Please try again.');
         } finally {
             setDownloading(false);
         }
     };
 
-    const downloadCombinedPDF = async () => {
+    const downloadCombinedPNG = async () => {
         if (!frontRef.current || !backRef.current) return;
         setDownloading(true);
         try {
-            const [canvasFront, canvasBack] = await Promise.all([
+            const scale = 3;
+            const [rawFront, rawBack] = await Promise.all([
                 html2canvas(frontRef.current, {
-                    scale: 3,
+                    scale,
                     useCORS: true,
-                    backgroundColor: '#ffffff',
+                    backgroundColor: null,
                     logging: false,
                 }),
                 html2canvas(backRef.current, {
-                    scale: 3,
+                    scale,
                     useCORS: true,
-                    backgroundColor: '#ffffff',
+                    backgroundColor: null,
                     logging: false,
                 }),
             ]);
 
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const pageW = pdf.internal.pageSize.getWidth();
-            const pageH = pdf.internal.pageSize.getHeight();
+            const frontCurved = clipToCurvedCard(rawFront, 16 * scale);
+            const backCurved = clipToCurvedCard(rawBack, 16 * scale);
 
-            // Stack 2 cards vertically on single A4 page
-            const cardMM_W = 75;
-            const cardMM_H_Front = (canvasFront.height / canvasFront.width) * cardMM_W;
-            const cardMM_H_Back = (canvasBack.height / canvasBack.width) * cardMM_W;
-            const gapMM = 12;
-            const totalH = cardMM_H_Front + cardMM_H_Back + gapMM;
+            // Side-by-side layout: exact cards with a clean gap, NO extra outer white padding
+            const gap = 36;
+            const totalW = frontCurved.width + backCurved.width + gap;
+            const totalH = Math.max(frontCurved.height, backCurved.height);
 
-            const x = (pageW - cardMM_W) / 2;
-            const yFront = (pageH - totalH) / 2;
-            const yBack = yFront + cardMM_H_Front + gapMM;
+            const compCanvas = document.createElement('canvas');
+            compCanvas.width = totalW;
+            compCanvas.height = totalH;
+            const ctx = compCanvas.getContext('2d');
 
-            // Pure white page background
-            pdf.setFillColor(255, 255, 255);
-            pdf.rect(0, 0, pageW, pageH, 'F');
+            // Draw front card on the left
+            ctx.drawImage(frontCurved, 0, 0);
 
-            // 1. Front Side (top)
-            pdf.addImage(canvasFront.toDataURL('image/png'), 'PNG', x, yFront, cardMM_W, cardMM_H_Front);
+            // Draw back card on the right (side by side)
+            ctx.drawImage(backCurved, frontCurved.width + gap, 0);
 
-            // 2. Back Side (below front)
-            pdf.addImage(canvasBack.toDataURL('image/png'), 'PNG', x, yBack, cardMM_W, cardMM_H_Back);
+            const empName = employee
+                ? `${employee.firstName || ''}_${employee.lastName || ''}_${employee.staffId || ''}`.replace(/\s+/g, '_')
+                : 'Front_and_Back';
+            const fname = `IDCard_${empName}_Both_Sides.png`;
 
-            const fname = employee
-                ? `IDCard_${employee.firstName}_${employee.lastName}_${employee.staffId}.pdf`
-                : 'IDCard_Front_and_Back.pdf';
-            pdf.save(fname);
+            triggerDownload(compCanvas.toDataURL('image/png'), fname);
         } catch (err) {
-            console.error('Combined PDF generation failed:', err);
-            alert('Could not generate PDF. Please try again.');
+            console.error('Combined PNG generation failed:', err);
+            alert('Could not generate PNG. Please try again.');
         } finally {
             setDownloading(false);
         }
@@ -177,10 +191,10 @@ const IDCardPreviewPanel = ({
 
             {/* Download buttons */}
             <div className="ipp__actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                {/* Primary: Single Page Front + Back PDF */}
+                {/* Primary: Side-by-side Front + Back PNG */}
                 <button
                     className={`ipp__download-btn ${downloading ? 'ipp__download-btn--loading' : ''}`}
-                    onClick={downloadCombinedPDF}
+                    onClick={downloadCombinedPNG}
                     disabled={downloading}
                     id="downloadCombinedBtn"
                     style={{ minWidth: '320px', padding: '0 32px' }}
@@ -188,7 +202,7 @@ const IDCardPreviewPanel = ({
                     {downloading ? (
                         <>
                             <span className="ipp__spinner" />
-                            Generating PDF...
+                            Generating PNG...
                         </>
                     ) : (
                         <>
@@ -197,7 +211,7 @@ const IDCardPreviewPanel = ({
                                 <polyline points="7 10 12 15 17 10" />
                                 <line x1="12" y1="15" x2="12" y2="3" />
                             </svg>
-                            Download Front &amp; Back (Single Page PDF)
+                            Download Front &amp; Back (PNG)
                         </>
                     )}
                 </button>
@@ -206,7 +220,7 @@ const IDCardPreviewPanel = ({
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                     <button
                         type="button"
-                        onClick={downloadFrontPDF}
+                        onClick={downloadFrontPNG}
                         disabled={downloading}
                         id="downloadFrontSideBtn"
                         style={{
@@ -224,12 +238,12 @@ const IDCardPreviewPanel = ({
                             gap: '6px'
                         }}
                     >
-                        Front Side Only
+                        Front Side (PNG)
                     </button>
 
                     <button
                         type="button"
-                        onClick={downloadBackPDF}
+                        onClick={downloadBackPNG}
                         disabled={downloading}
                         id="downloadBackSideBtn"
                         style={{
@@ -247,7 +261,7 @@ const IDCardPreviewPanel = ({
                             gap: '6px'
                         }}
                     >
-                        Back Side Only
+                        Back Side (PNG)
                     </button>
                 </div>
             </div>

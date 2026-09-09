@@ -134,7 +134,7 @@
    Allows the photo underneath and the blue block behind it to be visible through the gradient */
 .geo--gradient {
     top: 136px;
-    left: 241px;
+    left: 242px;
     width: 50px;
     height: 280px;
     background: linear-gradient(180deg, #010080 0%, rgba(58, 120, 105, 0.76) 40%, rgba(65, 160, 85, 0.76) 70%, #35AF33 100%);
@@ -177,7 +177,7 @@
 }
 
 .idc__meta {
-    margin-top: 14px;
+    margin-top: 5px;
     display: flex;
     align-items: center;
     gap: 86px;
