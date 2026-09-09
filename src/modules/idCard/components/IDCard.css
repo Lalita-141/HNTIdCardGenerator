@@ -1,0 +1,277 @@
+/* ===================================================
+   ID CARD — Exact Figma Specifications (1:1 Match)
+   Card dimensions: 344px × 545px
+   =================================================== */
+.idc {
+    width: 344px;
+    height: 545px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    font-family: "Montserrat", sans-serif;
+    flex-shrink: 0;
+}
+
+/* ===================================================
+   FRONT CARD
+   =================================================== */
+.idc--front {
+    background: #ffffff;
+    border: 1px solid #f3f0f0;
+}
+
+/* Header with exact Figma logo */
+.idc__header {
+    position: absolute;
+    top: 24px;
+    left: 42px;
+    width: 254px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    z-index: 5;
+}
+
+.idc__logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* --- Geometric Shapes --- */
+.geo {
+    position: absolute;
+    border-radius: 0;
+}
+
+/* Orange square behind top-left of photo (x=22, y=119, w=60, h=59) */
+.geo--orange {
+    top: 119px;
+    left: 22px;
+    width: 60px;
+    height: 59px;
+    background: #ff9934;
+    z-index: 1;
+}
+
+/* Photo wrap (x=42, y=136, w=263, h=183) */
+.idc__photo-wrap {
+    position: absolute;
+    top: 136px;
+    left: 42px;
+    width: 250px;
+    height: 220px;
+    background: #c8eec7;
+    z-index: 2;
+    overflow: hidden;
+}
+
+/* Gray fill when image is not present */
+.idc__photo-wrap--empty {
+    background: #cfd4dc;
+}
+
+.idc__photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+}
+
+.idc__photo-placeholder {
+    width: 100%;
+    height: 100%;
+}
+
+.idc__photo-placeholder--gray {
+    width: 100%;
+    height: 100%;
+    background: #C8EEC7;
+}
+
+/* Royal blue accent block (x=265, y=349, w=56, h=60) — positioned behind gradient column */
+.geo--blue-sm {
+    top: 327px;
+    left: 260px;
+    width: 44px;
+    height: 52px;
+    background: #313CD4;
+    z-index: 1;
+}
+
+/* Semi-transparent vertical gradient column on right side (x=241, y=136, w=68, h=243)
+   Allows the photo underneath and the blue block behind it to be visible through the gradient */
+.geo--gradient {
+    top: 136px;
+    left: 241px;
+    width: 50px;
+    height: 280px;
+    background: linear-gradient(180deg, #010080 0%, rgba(58, 120, 105, 0.76) 40%, rgba(65, 160, 85, 0.76) 70%, #35AF33 100%);
+    z-index: 3;
+    pointer-events: none;
+    opacity: 65%;
+}
+
+/* Translucent green overlay box (x=242, y=379, w=60, h=56)
+   Overlaps part of the blue block and extends below */
+.geo--green-sm {
+    top: 379px;
+    left: 242px;
+    width: 60px;
+    height: 56px;
+    background: rgba(60, 178, 57, 0.52);
+    z-index: 4;
+    pointer-events: none;
+}
+
+/* --- Employee Info (x=43, y=351) --- */
+.idc__info {
+    position: absolute;
+    top: 368px;
+    left: 43px;
+    z-index: 5;
+}
+
+.idc__name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #000000;
+    margin: 0;
+    line-height: 1.15;
+    letter-spacing: -0.3px;
+    max-width: 195px;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.idc__meta {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 86px;
+}
+
+.idc__staff-id {
+    font-size: 18px;
+    font-weight: 700;
+    color: #374151;
+    letter-spacing: 0.2px;
+}
+
+.idc__blood {
+    font-size: 18px;
+    font-weight: 700;
+    color: #374151;
+}
+
+/* --- Footer (y=509..520, left=25, right=25) --- */
+.idc__footer {
+    position: absolute;
+    bottom: 24px;
+    left: 25px;
+    right: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 5;
+}
+
+.idc__footer span {
+    font-size: 11px;
+    font-weight: 700;
+    color: #188F16;
+    letter-spacing: 0.1px;
+    text-transform: none;
+}
+
+/* ===================================================
+   BACK CARD — 1:1 Exact Figma Match
+   =================================================== */
+.idc--back {
+    background: #fbfbfb;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Gradient border wrapper (orange to green) */
+.idc-back__box-wrap {
+    margin: 28px 21px 0;
+    padding: 2px;
+    background: linear-gradient(135deg, #ff912a 0%, #ff912a 62%, #16a34a 100%);
+    border-radius: 18px;
+    box-sizing: border-box;
+}
+
+.idc-back__box {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.idc-back__belongs-to {
+    font-size: 14px;
+    color: #188F16;
+    font-weight: 600;
+    line-height: 1.45;
+    font-style: unset;
+    margin: 0;
+}
+
+.idc-back__belongs-to strong {
+    font-weight: 600;
+    font-size: 14px;
+    display: block;
+}
+
+.idc-back__return-label {
+    font-size: 13px;
+    font-style: italic;
+    font-weight: 700;
+    color: #188F16;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.idc-back__detail {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.idc-back__detail svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.idc-back__detail span {
+    font-size: 12.5px;
+    color: #374151;
+    line-height: 1.45;
+    font-weight: 600;
+}
+
+/* Bottom centered logo (no top divider border) */
+.idc-back__logo {
+    position: absolute;
+    bottom: 34px;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.idc-back__logo-img {
+    width: 254px;
+    height: 52px;
+    object-fit: contain;
+    display: block;
+}
