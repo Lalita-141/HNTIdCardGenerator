@@ -11,13 +11,15 @@ const IdCardPage = () => {
     const [customPhoto, setCustomPhoto] = useState(null);
     const [processedPhoto, setProcessedPhoto] = useState(null);
     const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
+    const [photoTransform, setPhotoTransform] = useState({ zoom: 1, x: 0, y: 0 });
     const { employee, loading, error, fetchEmployee } = useEmployee();
 
-    // Reset custom and processed photo whenever a new employee is loaded from API
+    // Reset custom photo, processed photo and transform whenever a new employee is loaded from API
     useEffect(() => {
         if (employee) {
             setCustomPhoto(null);
             setProcessedPhoto(null);
+            setPhotoTransform({ zoom: 1, x: 0, y: 0 });
         }
     }, [employee?.staffId]);
 
@@ -31,6 +33,7 @@ const IdCardPage = () => {
         if (!rawPhoto) {
             setProcessedPhoto(null);
             setIsProcessingPhoto(false);
+            setPhotoTransform({ zoom: 1, x: 0, y: 0 });
             return;
         }
 
@@ -60,8 +63,14 @@ const IdCardPage = () => {
         if (staffId.trim()) {
             setCustomPhoto(null);
             setProcessedPhoto(null);
+            setPhotoTransform({ zoom: 1, x: 0, y: 0 });
             fetchEmployee(staffId.trim());
         }
+    };
+
+    const handlePhotoUpload = (photo) => {
+        setCustomPhoto(photo);
+        setPhotoTransform({ zoom: 1, x: 0, y: 0 });
     };
 
     return (
@@ -76,9 +85,11 @@ const IdCardPage = () => {
                     error={error}
                     onGenerate={handleGenerate}
                     customPhoto={customPhoto}
-                    onPhotoUpload={setCustomPhoto}
+                    onPhotoUpload={handlePhotoUpload}
                     processedPhoto={processedPhoto}
                     isProcessingPhoto={isProcessingPhoto}
+                    photoTransform={photoTransform}
+                    onPhotoTransformChange={setPhotoTransform}
                 />
             </section>
 
@@ -89,6 +100,8 @@ const IdCardPage = () => {
                     customPhoto={customPhoto}
                     processedPhoto={processedPhoto}
                     isProcessingPhoto={isProcessingPhoto}
+                    photoTransform={photoTransform}
+                    onPhotoTransformChange={setPhotoTransform}
                 />
             </section>
 

@@ -24,9 +24,14 @@ const IDCardFront = ({
     customPhoto,
     processedPhoto,
     isProcessingPhoto,
+    photoTransform = { zoom: 1, x: 0, y: 0 },
+    onPhotoTransformChange,
     cardRef,
 }) => {
     const [imgError, setImgError] = React.useState(false);
+    const [isDragging, setIsDragging] = React.useState(false);
+    const dragStartRef = React.useRef({ startX: 0, startY: 0, initX: 0, initY: 0 });
+    const photoWrapRef = React.useRef(null);
 
     let profileSrc = null;
     if (processedPhoto) {
@@ -49,6 +54,105 @@ const IDCardFront = ({
 
     const hasValidPhoto = Boolean(profileSrc) && !imgError;
 
+    // Pointer events for smooth mouse & touch dragging
+    const handlePointerDown = (e) => {
+        if (!hasValidPhoto || isProcessingPhoto || e.button !== 0) return;
+        if (e.target.closest('.idc__photo-toolbar')) return;
+
+        try {
+            e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+            // fallback
+        }
+        setIsDragging(true);
+        dragStartRef.current = {
+            startX: e.clientX,
+            startY: e.clientY,
+            initX: photoTransform?.x || 0,
+            initY: photoTransform?.y || 0,
+        };
+    };
+
+    const handlePointerMove = (e) => {
+        if (!isDragging || !onPhotoTransformChange) return;
+        const deltaX = e.clientX - dragStartRef.current.startX;
+        const deltaY = e.clientY - dragStartRef.current.startY;
+        onPhotoTransformChange({
+            zoom: photoTransform?.zoom || 1,
+            x: Math.round(dragStartRef.current.initX + deltaX),
+            y: Math.round(dragStartRef.current.initY + deltaY),
+        });
+    };
+
+    const handlePointerUp = (e) => {
+        if (!isDragging) return;
+        try {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch {
+            // ignore
+        }
+        setIsDragging(false);
+    };
+
+    // Wheel event for smooth mouse-wheel zooming
+    React.useEffect(() => {
+        const wrap = photoWrapRef.current;
+        if (!wrap) return;
+
+        const handleWheel = (e) => {
+            if (!hasValidPhoto || isProcessingPhoto) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            const zoomDelta = e.deltaY < 0 ? 0.08 : -0.08;
+            const currentZoom = photoTransform?.zoom || 1;
+            const newZoom = Math.min(2.5, Math.max(0.5, Number((currentZoom + zoomDelta).toFixed(2))));
+
+            if (onPhotoTransformChange) {
+                onPhotoTransformChange({
+                    zoom: newZoom,
+                    x: photoTransform?.x || 0,
+                    y: photoTransform?.y || 0,
+                });
+            }
+        };
+
+        wrap.addEventListener('wheel', handleWheel, { passive: false });
+        return () => wrap.removeEventListener('wheel', handleWheel);
+    }, [hasValidPhoto, isProcessingPhoto, photoTransform, onPhotoTransformChange]);
+
+    const handleZoomIn = (e) => {
+        e.stopPropagation();
+        if (!onPhotoTransformChange) return;
+        const currentZoom = photoTransform?.zoom || 1;
+        const newZoom = Math.min(2.5, Number((currentZoom + 0.1).toFixed(2)));
+        onPhotoTransformChange({
+            zoom: newZoom,
+            x: photoTransform?.x || 0,
+            y: photoTransform?.y || 0,
+        });
+    };
+
+    const handleZoomOut = (e) => {
+        e.stopPropagation();
+        if (!onPhotoTransformChange) return;
+        const currentZoom = photoTransform?.zoom || 1;
+        const newZoom = Math.max(0.5, Number((currentZoom - 0.1).toFixed(2)));
+        onPhotoTransformChange({
+            zoom: newZoom,
+            x: photoTransform?.x || 0,
+            y: photoTransform?.y || 0,
+        });
+    };
+
+    const handleReset = (e) => {
+        e.stopPropagation();
+        if (!onPhotoTransformChange) return;
+        onPhotoTransformChange({ zoom: 1, x: 0, y: 0 });
+    };
+
+    const zoomPercent = Math.round((photoTransform?.zoom || 1) * 100);
+
     return (
         <div className="idc idc--front" ref={cardRef}>
             {/* Header with exact Figma logo */}
@@ -63,8 +167,15 @@ const IDCardFront = ({
             {/* Orange block behind top-left of photo */}
             <div className="geo geo--orange" />
 
-            {/* Photo wrap (or solid gray fill when empty) */}
-            <div className={`idc__photo-wrap ${!hasValidPhoto && !isProcessingPhoto ? 'idc__photo-wrap--empty' : ''}`}>
+            {/* Photo wrap with interactive drag & zoom */}
+            <div
+                ref={photoWrapRef}
+                className={`idc__photo-wrap ${!hasValidPhoto && !isProcessingPhoto ? 'idc__photo-wrap--empty' : ''} ${hasValidPhoto ? 'idc__photo-wrap--interactive' : ''} ${isDragging ? 'idc__photo-wrap--dragging' : ''}`}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+            >
                 {hasValidPhoto ? (
                     <>
                         <img
@@ -73,7 +184,55 @@ const IDCardFront = ({
                             className="idc__photo-img"
                             onError={() => setImgError(true)}
                             crossOrigin="anonymous"
+                            draggable={false}
+                            style={{
+                                transform: `translate(${photoTransform?.x || 0}px, ${photoTransform?.y || 0}px) scale(${photoTransform?.zoom || 1})`,
+                                transformOrigin: 'center center',
+                                transition: isDragging ? 'none' : 'transform 0.12s ease-out',
+                            }}
                         />
+
+                        {/* Interactive floating toolbar (ignored during JPG export) */}
+                        {!isProcessingPhoto && (
+                            <div className="idc__photo-toolbar" data-html2canvas-ignore="true">
+                                <button
+                                    type="button"
+                                    className="idc__photo-btn"
+                                    onClick={handleZoomOut}
+                                    title="Zoom Out"
+                                    aria-label="Zoom Out"
+                                >
+                                    −
+                                </button>
+                                <span className="idc__photo-zoom-badge">{zoomPercent}%</span>
+                                <button
+                                    type="button"
+                                    className="idc__photo-btn"
+                                    onClick={handleZoomIn}
+                                    title="Zoom In"
+                                    aria-label="Zoom In"
+                                >
+                                    +
+                                </button>
+                                <button
+                                    type="button"
+                                    className="idc__photo-btn idc__photo-btn--reset"
+                                    onClick={handleReset}
+                                    title="Reset to Default"
+                                    aria-label="Reset to Default"
+                                >
+                                    ⟲
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Subtle reposition hint on hover */}
+                        {!isProcessingPhoto && (
+                            <div className="idc__photo-hint" data-html2canvas-ignore="true">
+                                <span>Drag to reposition · Scroll to zoom</span>
+                            </div>
+                        )}
+
                         {isProcessingPhoto && (
                             <div className="idc__photo-processing">
                                 <span className="idc__photo-spinner" />
@@ -88,7 +247,6 @@ const IDCardFront = ({
                     <div className="idc__photo-placeholder idc__photo-placeholder--gray" />
                 )}
             </div>
-
 
             {/* Royal blue accent block (behind gradient) */}
             <div className="geo geo--blue-sm" />

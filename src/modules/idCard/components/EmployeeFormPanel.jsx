@@ -14,6 +14,8 @@ const EmployeeFormPanel = ({
     onPhotoUpload,
     processedPhoto,
     isProcessingPhoto: _isProcessingPhoto,
+    photoTransform = { zoom: 1, x: 0, y: 0 },
+    onPhotoTransformChange,
 }) => {
     const fileInputRef = useRef(null);
     const [avatarError, setAvatarError] = useState(false);
@@ -130,7 +132,7 @@ const EmployeeFormPanel = ({
                             className="efp__photo-toggle-btn efp__photo-toggle-btn--remove"
                             onClick={() => onPhotoUpload(null)}
                         >
-                            {employee?.profilePicture ? 'Reset to Profile Photo' : 'Remove Photo (Show Gray)'}
+                            {employee?.profilePicture ? 'Reset to Profile Photo' : 'Remove Photo'}
                         </button>
                     ) : (
                         <button
@@ -175,6 +177,134 @@ const EmployeeFormPanel = ({
                         </>
                     )}
                 </div>
+
+                {/* Interactive Photo Adjustment Controls */}
+                {Boolean(customPhoto || employee?.profilePicture) && (
+                    <div className="efp__adjust-card">
+                        <div className="efp__adjust-header">
+                            <span className="efp__adjust-title">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="11" cy="11" r="8" />
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                    <line x1="11" y1="8" x2="11" y2="14" />
+                                    <line x1="8" y1="11" x2="14" y2="11" />
+                                </svg>
+                                Adjust Photo Framing
+                            </span>
+                            <button
+                                type="button"
+                                className="efp__adjust-reset-btn"
+                                onClick={() => onPhotoTransformChange?.({ zoom: 1, x: 0, y: 0 })}
+                                title="Reset to Center & Default Size"
+                            >
+                                ⟲ Reset
+                            </button>
+                        </div>
+
+                        {/* Zoom row */}
+                        <div className="efp__adjust-row">
+                            <span className="efp__adjust-label">Zoom</span>
+                            <div className="efp__zoom-control">
+                                <button
+                                    type="button"
+                                    className="efp__zoom-step-btn"
+                                    onClick={() => onPhotoTransformChange?.({
+                                        ...photoTransform,
+                                        zoom: Math.max(0.5, Number(((photoTransform?.zoom || 1) - 0.05).toFixed(2))),
+                                    })}
+                                    title="Zoom Out"
+                                >
+                                    −
+                                </button>
+                                <input
+                                    type="range"
+                                    className="efp__zoom-slider"
+                                    min="50"
+                                    max="250"
+                                    step="5"
+                                    value={Math.round((photoTransform?.zoom || 1) * 100)}
+                                    onChange={(e) => onPhotoTransformChange?.({
+                                        ...photoTransform,
+                                        zoom: Number(e.target.value) / 100,
+                                    })}
+                                />
+                                <button
+                                    type="button"
+                                    className="efp__zoom-step-btn"
+                                    onClick={() => onPhotoTransformChange?.({
+                                        ...photoTransform,
+                                        zoom: Math.min(2.5, Number(((photoTransform?.zoom || 1) + 0.05).toFixed(2))),
+                                    })}
+                                    title="Zoom In"
+                                >
+                                    +
+                                </button>
+                                <span className="efp__zoom-val">{Math.round((photoTransform?.zoom || 1) * 100)}%</span>
+                            </div>
+                        </div>
+
+                        {/* Position Nudge Controls */}
+                        <div className="efp__adjust-pos-wrap">
+                            <span className="efp__adjust-label">Position</span>
+                            <div className="efp__nudge-dpad">
+                                <button
+                                    type="button"
+                                    className="efp__nudge-btn efp__nudge-btn--up"
+                                    onClick={() => onPhotoTransformChange?.({
+                                        ...photoTransform,
+                                        y: (photoTransform?.y || 0) - 8,
+                                    })}
+                                    title="Move Up"
+                                    aria-label="Move Up"
+                                >
+                                    ▲
+                                </button>
+                                <div className="efp__nudge-row">
+                                    <button
+                                        type="button"
+                                        className="efp__nudge-btn efp__nudge-btn--left"
+                                        onClick={() => onPhotoTransformChange?.({
+                                            ...photoTransform,
+                                            x: (photoTransform?.x || 0) - 8,
+                                        })}
+                                        title="Move Left"
+                                        aria-label="Move Left"
+                                    >
+                                        ◀
+                                    </button>
+                                    <span className="efp__nudge-center" />
+                                    <button
+                                        type="button"
+                                        className="efp__nudge-btn efp__nudge-btn--right"
+                                        onClick={() => onPhotoTransformChange?.({
+                                            ...photoTransform,
+                                            x: (photoTransform?.x || 0) + 8,
+                                        })}
+                                        title="Move Right"
+                                        aria-label="Move Right"
+                                    >
+                                        ▶
+                                    </button>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="efp__nudge-btn efp__nudge-btn--down"
+                                    onClick={() => onPhotoTransformChange?.({
+                                        ...photoTransform,
+                                        y: (photoTransform?.y || 0) + 8,
+                                    })}
+                                    title="Move Down"
+                                    aria-label="Move Down"
+                                >
+                                    ▼
+                                </button>
+                            </div>
+                            <span className="efp__adjust-hint-text">
+                                Drag photo directly on card to adjust position, or scroll to zoom.
+                            </span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Photo guidelines / instruction */}
                 <div className="efp__photo-instruction">

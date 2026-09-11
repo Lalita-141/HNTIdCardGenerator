@@ -52,6 +52,8 @@ const IDCardPreviewPanel = ({
     customPhoto,
     processedPhoto,
     isProcessingPhoto,
+    photoTransform,
+    onPhotoTransformChange,
 }) => {
     const frontRef = useRef(null);
     const backRef = useRef(null);
@@ -187,6 +189,8 @@ const IDCardPreviewPanel = ({
                         customPhoto={customPhoto}
                         processedPhoto={processedPhoto}
                         isProcessingPhoto={isProcessingPhoto}
+                        photoTransform={photoTransform}
+                        onPhotoTransformChange={onPhotoTransformChange}
                         cardRef={frontRef}
                     />
                     <span className="ipp__card-label">Front Side</span>

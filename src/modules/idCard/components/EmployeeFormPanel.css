@@ -321,4 +321,208 @@
     color: #16a34a;
 }
 
+/* ===================================================
+   PHOTO ADJUSTMENT CONTROLS CARD
+   =================================================== */
+.efp__adjust-card {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.efp__adjust-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.efp__adjust-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.efp__adjust-title svg {
+    color: #188F16;
+}
+
+.efp__adjust-reset-btn {
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #4b5563;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.efp__adjust-reset-btn:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fca5a5;
+}
+
+.efp__adjust-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.efp__adjust-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4b5563;
+    min-width: 48px;
+}
+
+.efp__zoom-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.efp__zoom-step-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+
+.efp__zoom-step-btn:hover {
+    background: #188F16;
+    color: #ffffff;
+    border-color: #188F16;
+}
+
+.efp__zoom-slider {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #e5e7eb;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.efp__zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #188F16;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    transition: transform 0.1s ease;
+}
+
+.efp__zoom-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.efp__zoom-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 50%;
+    background: #188F16;
+    cursor: pointer;
+}
+
+.efp__zoom-val {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #166534;
+    background: #dcfce7;
+    padding: 2px 7px;
+    border-radius: 6px;
+    min-width: 40px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Position Nudge D-pad */
+.efp__adjust-pos-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #e5e7eb;
+}
+
+.efp__nudge-dpad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.efp__nudge-row {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.efp__nudge-btn {
+    width: 26px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    color: #4b5563;
+    font-size: 10px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+
+.efp__nudge-btn:hover {
+    background: #188F16;
+    color: #ffffff;
+    border-color: #188F16;
+}
+
+.efp__nudge-center {
+    width: 26px;
+    height: 22px;
+    display: block;
+    background: #f9fafb;
+    border: 1px dashed #e5e7eb;
+    border-radius: 5px;
+}
+
+.efp__adjust-hint-text {
+    font-size: 11px;
+    line-height: 1.4;
+    color: #6b7280;
+}
+
 

@@ -74,6 +74,16 @@
     background: #c8eec7;
 }
 
+.idc__photo-wrap--interactive {
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+}
+
+.idc__photo-wrap--dragging {
+    cursor: grabbing !important;
+}
+
 .idc__photo-img {
     width: 100%;
     height: 100%;
@@ -81,6 +91,102 @@
     object-position: center top;
     display: block;
     background: #c8eec7;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* Floating on-card photo adjustment toolbar */
+.idc__photo-toolbar {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 6px;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: auto;
+}
+
+.idc__photo-wrap:hover .idc__photo-toolbar,
+.idc__photo-wrap:focus-within .idc__photo-toolbar,
+.idc__photo-wrap--dragging .idc__photo-toolbar {
+    opacity: 1;
+}
+
+.idc__photo-btn {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: #f3f4f6;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 0;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+
+.idc__photo-btn:hover {
+    background: #188F16;
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+.idc__photo-btn--reset {
+    font-size: 11px;
+}
+
+.idc__photo-zoom-badge {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #374151;
+    padding: 0 4px;
+    min-width: 32px;
+    text-align: center;
+    user-select: none;
+}
+
+/* Subtle drag and zoom hint */
+.idc__photo-hint {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 2px 8px;
+    background: rgba(15, 23, 42, 0.75);
+    color: #ffffff;
+    font-size: 9.5px;
+    font-weight: 500;
+    border-radius: 10px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+    letter-spacing: 0.1px;
+}
+
+.idc__photo-wrap:hover .idc__photo-hint {
+    opacity: 0.95;
+}
+
+.idc__photo-wrap--dragging .idc__photo-hint {
+    opacity: 0 !important;
 }
 
 .idc__photo-placeholder {
