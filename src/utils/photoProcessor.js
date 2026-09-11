@@ -35,7 +35,14 @@ function blobToDataUrl(blob) {
  *    take the true color of hair/skin/clothing rather than background white.
  * 3. Smooth mathematical un-premultiplication for any remaining semi-transparent fringe.
  */
-function refineCutoutEdges(img) {
+/**
+ * Refines the cutout edges to eliminate white halo / matte fringe and background noise:
+ * 1. Suppresses low-confidence background noise and compression artifacts.
+ * 2. Connected Component Analysis: isolates the main subject and removes floating
+ *    background islands, specks, and white dots.
+ * 3. Color defringing / un-premultiplying: eliminates white matte edge halos.
+ */
+function removeStrayArtifactsAndDefringe(img) {
     const w = img.naturalWidth;
     const h = img.naturalHeight;
 
@@ -47,74 +54,116 @@ function refineCutoutEdges(img) {
 
     const imgData = ctx.getImageData(0, 0, w, h);
     const data = imgData.data;
+    const totalPixels = w * h;
 
-    // Extract alpha channel
-    const alphaSrc = new Uint8Array(w * h);
-    for (let i = 0; i < w * h; i++) {
-        alphaSrc[i] = data[i * 4 + 3];
+    // Extract alpha channel & suppress weak background noise (alpha < 35)
+    const alpha = new Uint8Array(totalPixels);
+    for (let i = 0; i < totalPixels; i++) {
+        const a = data[i * 4 + 3];
+        alpha[i] = a < 35 ? 0 : a;
     }
 
-    // Step 1: 1px Alpha erosion (matte shrink to cut off white halo)
-    const erodedAlpha = new Uint8Array(w * h);
-    for (let y = 1; y < h - 1; y++) {
-        for (let x = 1; x < w - 1; x++) {
+    // Connected Component Analysis: keep primary subject and eliminate stray background dots
+    const visited = new Uint8Array(totalPixels);
+    const components = [];
+
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
             const idx = y * w + x;
-            const a = alphaSrc[idx];
-            if (a === 0) {
-                erodedAlpha[idx] = 0;
-                continue;
-            }
-            let minA = a;
-            const up = alphaSrc[(y - 1) * w + x];
-            const down = alphaSrc[(y + 1) * w + x];
-            const left = alphaSrc[y * w + (x - 1)];
-            const right = alphaSrc[y * w + (x + 1)];
-            if (up < minA) minA = up;
-            if (down < minA) minA = down;
-            if (left < minA) minA = left;
-            if (right < minA) minA = right;
-            erodedAlpha[idx] = minA;
-        }
-    }
+            if (alpha[idx] > 35 && visited[idx] === 0) {
+                const queue = new Int32Array(totalPixels);
+                let head = 0;
+                let tail = 0;
 
-    // Step 2: Color inpainting / despill (sample inward genuine foreground color for edges)
-    for (let y = 2; y < h - 2; y++) {
-        for (let x = 2; x < w - 2; x++) {
-            const pIdx = (y * w + x) * 4;
-            const a = erodedAlpha[y * w + x];
+                queue[tail++] = idx;
+                visited[idx] = 1;
 
-            if (a > 12 && a < 250) {
-                let sumR = 0, sumG = 0, sumB = 0, count = 0;
-                for (let dy = -2; dy <= 2; dy++) {
-                    for (let dx = -2; dx <= 2; dx++) {
-                        if (dx === 0 && dy === 0) continue;
-                        const nIdx = ((y + dy) * w + (x + dx)) * 4;
-                        const nA = alphaSrc[(y + dy) * w + (x + dx)];
-                        if (nA > 230) {
-                            sumR += data[nIdx];
-                            sumG += data[nIdx + 1];
-                            sumB += data[nIdx + 2];
-                            count++;
+                while (head < tail) {
+                    const curr = queue[head++];
+                    const cy = Math.floor(curr / w);
+                    const cx = curr % w;
+
+                    if (cx > 0) {
+                        const left = curr - 1;
+                        if (alpha[left] > 35 && visited[left] === 0) {
+                            visited[left] = 1;
+                            queue[tail++] = left;
+                        }
+                    }
+                    if (cx < w - 1) {
+                        const right = curr + 1;
+                        if (alpha[right] > 35 && visited[right] === 0) {
+                            visited[right] = 1;
+                            queue[tail++] = right;
+                        }
+                    }
+                    if (cy > 0) {
+                        const up = curr - w;
+                        if (alpha[up] > 35 && visited[up] === 0) {
+                            visited[up] = 1;
+                            queue[tail++] = up;
+                        }
+                    }
+                    if (cy < h - 1) {
+                        const down = curr + w;
+                        if (alpha[down] > 35 && visited[down] === 0) {
+                            visited[down] = 1;
+                            queue[tail++] = down;
                         }
                     }
                 }
 
-                if (count > 0) {
-                    data[pIdx] = Math.round(sumR / count);
-                    data[pIdx + 1] = Math.round(sumG / count);
-                    data[pIdx + 2] = Math.round(sumB / count);
-                } else {
-                    const normA = a / 255;
-                    data[pIdx] = Math.max(0, Math.min(255, (data[pIdx] - 255 * (1 - normA) * 0.9) / normA));
-                    data[pIdx + 1] = Math.max(0, Math.min(255, (data[pIdx + 1] - 255 * (1 - normA) * 0.9) / normA));
-                    data[pIdx + 2] = Math.max(0, Math.min(255, (data[pIdx + 2] - 255 * (1 - normA) * 0.9) / normA));
-                }
+                components.push({
+                    size: tail,
+                    queue: queue.subarray(0, tail)
+                });
+            }
+        }
+    }
 
-                data[pIdx + 3] = a;
-            } else if (a <= 12) {
-                data[pIdx + 3] = 0;
-            } else {
-                data[pIdx + 3] = a;
+    // Find the largest component (the person)
+    components.sort((a, b) => b.size - a.size);
+    const mainComp = components[0];
+
+    const keepMask = new Uint8Array(totalPixels);
+    if (mainComp && mainComp.size > 0) {
+        // Keep the main subject
+        for (let i = 0; i < mainComp.size; i++) {
+            keepMask[mainComp.queue[i]] = 1;
+        }
+        // Also keep any connected component >= 5% of main subject (e.g. hands/shoulders slightly detached)
+        const minKeepSize = Math.max(500, Math.floor(mainComp.size * 0.05));
+        for (let c = 1; c < components.length; c++) {
+            if (components[c].size >= minKeepSize) {
+                for (let i = 0; i < components[c].size; i++) {
+                    keepMask[components[c].queue[i]] = 1;
+                }
+            }
+        }
+    }
+
+    // Zero out alpha for any stray pixels not part of the subject
+    for (let i = 0; i < totalPixels; i++) {
+        if (keepMask[i] === 0) {
+            data[i * 4 + 3] = 0;
+            alpha[i] = 0;
+        } else {
+            data[i * 4 + 3] = alpha[i];
+        }
+    }
+
+    // Defringe edges & un-premultiply white background fringe so edges cleanly blend
+    for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+            const pIdx = (y * w + x) * 4;
+            const a = data[pIdx + 3];
+
+            if (a > 0 && a < 240) {
+                const normA = a / 255;
+                // Un-premultiply from white background to strip halo
+                data[pIdx] = Math.max(0, Math.min(255, Math.round((data[pIdx] - 255 * (1 - normA)) / normA)));
+                data[pIdx + 1] = Math.max(0, Math.min(255, Math.round((data[pIdx + 1] - 255 * (1 - normA)) / normA)));
+                data[pIdx + 2] = Math.max(0, Math.min(255, Math.round((data[pIdx + 2] - 255 * (1 - normA)) / normA)));
             }
         }
     }
@@ -124,13 +173,12 @@ function refineCutoutEdges(img) {
 }
 
 /**
- * Removes background from an image and applies natural edge finishing
- * (color despill, matte defringing, alpha erosion) so the subject blends
- * seamlessly without white halos, like professional background removal websites.
+ * Removes background from an image and applies natural edge finishing,
+ * noise removal, and frames it with the exact solid template green (#c8eec7) background.
  *
  * @param {string} imageSrc - URL, data URL, or base64 of the original photo
  * @param {function} [onProgress] - Optional progress callback
- * @returns {Promise<string>} - Transparent PNG data URL ready for the ID card
+ * @returns {Promise<string>} - Framed photo PNG data URL with template green background
  */
 export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
     if (!imageSrc || typeof imageSrc !== 'string') return null;
@@ -145,7 +193,7 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
 
     try {
         onProgress?.('Loading photo...');
-        // Ensure image is loaded and converted to Data URL so relative URLs never fail on staticimgly.com
+        // Ensure image is loaded and converted to Data URL
         let inputDataUrl = trimmed;
         if (!trimmed.startsWith('data:image/')) {
             const tempImg = await loadImage(trimmed);
@@ -159,9 +207,9 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
 
         onProgress?.('Removing background...');
 
-        // 1. Remove background directly on the full original image (clean cutout)
+        // 1. Remove background with high-precision 'medium' model (isnet_fp16)
         const blob = await removeBackground(inputDataUrl, {
-            model: 'small',
+            model: 'medium',
             progress: (key, current, total) => {
                 if (total > 0) {
                     const pct = Math.min(100, Math.round((current / total) * 100));
@@ -176,11 +224,11 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
         onProgress?.('Refining natural edges...');
         const rawCutoutImg = await loadImage(transparentDataUrl);
 
-        // 3. Apply professional natural edge finishing (defringing & despill)
-        const refinedCanvas = refineCutoutEdges(rawCutoutImg);
+        // 3. Remove stray background dots/artifacts and defringe edges
+        const refinedCanvas = removeStrayArtifactsAndDefringe(rawCutoutImg);
 
-        // 4. Frame it passport-style on high-resolution canvas (750px × 660px = 3x of 250px × 220px)
-        onProgress?.('Framing passport photo...');
+        // 4. Frame it passport-style on high-resolution canvas with EXACT template green background (#c8eec7)
+        onProgress?.('Framing photo...');
         const targetW = 750;
         const targetH = 660;
 
@@ -190,6 +238,10 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
         const ctx = canvas.getContext('2d');
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
+
+        // Fill background with exact template light green (#c8eec7)
+        ctx.fillStyle = '#c8eec7';
+        ctx.fillRect(0, 0, targetW, targetH);
 
         // Scale so the subject fills the frame prominently (passport portrait framing)
         const scale = Math.max(targetW / refinedCanvas.width, targetH / refinedCanvas.height);

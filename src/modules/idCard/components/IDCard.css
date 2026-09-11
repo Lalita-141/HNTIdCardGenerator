@@ -69,9 +69,9 @@
     overflow: hidden;
 }
 
-/* Gray fill when image is not present */
+/* Fill when image is not present — matches template green #c8eec7 */
 .idc__photo-wrap--empty {
-    background: #cfd4dc;
+    background: #c8eec7;
 }
 
 .idc__photo-img {
@@ -80,6 +80,7 @@
     object-fit: cover;
     object-position: center top;
     display: block;
+    background: #c8eec7;
 }
 
 .idc__photo-placeholder {
@@ -90,7 +91,7 @@
 .idc__photo-placeholder--gray {
     width: 100%;
     height: 100%;
-    background: #C8EEC7;
+    background: #c8eec7;
 }
 
 /* Processing spinner on ID card photo */

@@ -13,6 +13,14 @@ const IdCardPage = () => {
     const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
     const { employee, loading, error, fetchEmployee } = useEmployee();
 
+    // Reset custom and processed photo whenever a new employee is loaded from API
+    useEffect(() => {
+        if (employee) {
+            setCustomPhoto(null);
+            setProcessedPhoto(null);
+        }
+    }, [employee?.staffId]);
+
     const rawPhoto = customPhoto
         ? customPhoto
         : formatProfileImage(employee?.profilePicture);
@@ -50,6 +58,8 @@ const IdCardPage = () => {
 
     const handleGenerate = () => {
         if (staffId.trim()) {
+            setCustomPhoto(null);
+            setProcessedPhoto(null);
             fetchEmployee(staffId.trim());
         }
     };

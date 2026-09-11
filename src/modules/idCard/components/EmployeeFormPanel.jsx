@@ -24,6 +24,7 @@ const EmployeeFormPanel = ({
         const reader = new FileReader();
         reader.onload = (ev) => onPhotoUpload(ev.target.result);
         reader.readAsDataURL(file);
+        e.target.value = '';
     };
 
     const handleSearchKeyDown = (e) => {
@@ -129,7 +130,7 @@ const EmployeeFormPanel = ({
                             className="efp__photo-toggle-btn efp__photo-toggle-btn--remove"
                             onClick={() => onPhotoUpload(null)}
                         >
-                            Remove Photo (Show Gray)
+                            {employee?.profilePicture ? 'Reset to Profile Photo' : 'Remove Photo (Show Gray)'}
                         </button>
                     ) : (
                         <button
@@ -170,9 +171,21 @@ const EmployeeFormPanel = ({
                                 <polyline points="21 15 16 10 5 21" />
                             </svg>
                             <p className="efp__upload-text">Click to upload employee photo</p>
-                            <p className="efp__upload-hint">JPG, PNG | Max size: 5 MB</p>
+                            <p className="efp__upload-hint">Passport size · White background · JPG, PNG</p>
                         </>
                     )}
+                </div>
+
+                {/* Photo guidelines / instruction */}
+                <div className="efp__photo-instruction">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <span>
+                        <strong>Photo Guideline:</strong> Please upload a <strong>passport-size photo</strong> with a <strong>plain white background</strong>.
+                    </span>
                 </div>
             </div>
 

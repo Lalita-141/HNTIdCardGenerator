@@ -26,7 +26,7 @@ function clipToCurvedCard(sourceCanvas, radius = 48) {
     const ctx = outCanvas.getContext('2d');
 
     // Fill white background for JPEG so areas outside rounded corners remain clean white
-    ctx.fillStyle = 'null';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     ctx.save();
@@ -147,8 +147,8 @@ const IDCardPreviewPanel = ({
             const ctx = compCanvas.getContext('2d');
 
             // Pure white background for JPG
-            // ctx.fillStyle = '#ffffff';
-            // ctx.fillRect(0, 0, totalW, totalH);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, totalW, totalH);
 
             // Draw front card on the left
             ctx.drawImage(frontCurved, 0, 0);
