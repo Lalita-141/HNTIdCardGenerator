@@ -25,6 +25,11 @@ function clipToCurvedCard(sourceCanvas, radius = 48) {
     outCanvas.height = h;
     const ctx = outCanvas.getContext('2d');
 
+    // Fill white background for JPEG so areas outside rounded corners remain clean white
+    ctx.fillStyle = 'null';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.save();
     ctx.beginPath();
     if (ctx.roundRect) {
         ctx.roundRect(0, 0, w, h, radius);
@@ -38,6 +43,7 @@ function clipToCurvedCard(sourceCanvas, radius = 48) {
     }
     ctx.clip();
     ctx.drawImage(sourceCanvas, 0, 0, w, h);
+    ctx.restore();
     return outCanvas;
 }
 
@@ -51,7 +57,7 @@ const IDCardPreviewPanel = ({
     const backRef = useRef(null);
     const [downloading, setDownloading] = useState(false);
 
-    const downloadFrontPNG = async () => {
+    const downloadFrontJPG = async () => {
         if (!frontRef.current) return;
         setDownloading(true);
         try {
@@ -68,18 +74,18 @@ const IDCardPreviewPanel = ({
             const empName = employee
                 ? `${employee.firstName || ''}_${employee.lastName || ''}_${employee.staffId || ''}`.replace(/\s+/g, '_')
                 : 'Front';
-            const fname = `IDCard_${empName}.png`;
+            const fname = `IDCard_${empName}.jpg`;
 
-            triggerDownload(curvedCanvas.toDataURL('image/png'), fname);
+            triggerDownload(curvedCanvas.toDataURL('image/jpeg', 0.98), fname);
         } catch (err) {
-            console.error('Front PNG generation failed:', err);
-            alert('Could not generate PNG. Please try again.');
+            console.error('Front JPG generation failed:', err);
+            alert('Could not generate JPG. Please try again.');
         } finally {
             setDownloading(false);
         }
     };
 
-    const downloadBackPNG = async () => {
+    const downloadBackJPG = async () => {
         if (!backRef.current) return;
         setDownloading(true);
         try {
@@ -96,18 +102,18 @@ const IDCardPreviewPanel = ({
             const empName = employee
                 ? `${employee.firstName || ''}_${employee.lastName || ''}_${employee.staffId || ''}`.replace(/\s+/g, '_')
                 : 'Back';
-            const fname = `IDCard_Back_${empName}.png`;
+            const fname = `IDCard_Back_${empName}.jpg`;
 
-            triggerDownload(curvedCanvas.toDataURL('image/png'), fname);
+            triggerDownload(curvedCanvas.toDataURL('image/jpeg', 0.98), fname);
         } catch (err) {
-            console.error('Back PNG generation failed:', err);
-            alert('Could not generate PNG. Please try again.');
+            console.error('Back JPG generation failed:', err);
+            alert('Could not generate JPG. Please try again.');
         } finally {
             setDownloading(false);
         }
     };
 
-    const downloadCombinedPNG = async () => {
+    const downloadCombinedJPG = async () => {
         if (!frontRef.current || !backRef.current) return;
         setDownloading(true);
         try {
@@ -130,7 +136,7 @@ const IDCardPreviewPanel = ({
             const frontCurved = clipToCurvedCard(rawFront, 16 * scale);
             const backCurved = clipToCurvedCard(rawBack, 16 * scale);
 
-            // Side-by-side layout: exact cards with a clean gap, NO extra outer white padding
+            // Side-by-side layout: exact cards with a clean gap, filled with crisp white background
             const gap = 36;
             const totalW = frontCurved.width + backCurved.width + gap;
             const totalH = Math.max(frontCurved.height, backCurved.height);
@@ -139,6 +145,10 @@ const IDCardPreviewPanel = ({
             compCanvas.width = totalW;
             compCanvas.height = totalH;
             const ctx = compCanvas.getContext('2d');
+
+            // Pure white background for JPG
+            // ctx.fillStyle = '#ffffff';
+            // ctx.fillRect(0, 0, totalW, totalH);
 
             // Draw front card on the left
             ctx.drawImage(frontCurved, 0, 0);
@@ -149,12 +159,12 @@ const IDCardPreviewPanel = ({
             const empName = employee
                 ? `${employee.firstName || ''}_${employee.lastName || ''}_${employee.staffId || ''}`.replace(/\s+/g, '_')
                 : 'Front_and_Back';
-            const fname = `IDCard_${empName}_Both_Sides.png`;
+            const fname = `IDCard_${empName}_Both_Sides.jpg`;
 
-            triggerDownload(compCanvas.toDataURL('image/png'), fname);
+            triggerDownload(compCanvas.toDataURL('image/jpeg', 0.98), fname);
         } catch (err) {
-            console.error('Combined PNG generation failed:', err);
-            alert('Could not generate PNG. Please try again.');
+            console.error('Combined JPG generation failed:', err);
+            alert('Could not generate JPG. Please try again.');
         } finally {
             setDownloading(false);
         }
@@ -191,10 +201,10 @@ const IDCardPreviewPanel = ({
 
             {/* Download buttons */}
             <div className="ipp__actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                {/* Primary: Side-by-side Front + Back PNG */}
+                {/* Primary: Side-by-side Front + Back JPG */}
                 <button
                     className={`ipp__download-btn ${downloading ? 'ipp__download-btn--loading' : ''}`}
-                    onClick={downloadCombinedPNG}
+                    onClick={downloadCombinedJPG}
                     disabled={downloading}
                     id="downloadCombinedBtn"
                     style={{ minWidth: '320px', padding: '0 32px' }}
@@ -202,7 +212,7 @@ const IDCardPreviewPanel = ({
                     {downloading ? (
                         <>
                             <span className="ipp__spinner" />
-                            Generating PNG...
+                            Generating JPG...
                         </>
                     ) : (
                         <>
@@ -211,7 +221,7 @@ const IDCardPreviewPanel = ({
                                 <polyline points="7 10 12 15 17 10" />
                                 <line x1="12" y1="15" x2="12" y2="3" />
                             </svg>
-                            Download Front &amp; Back (PNG)
+                            Download Front &amp; Back (JPG)
                         </>
                     )}
                 </button>
@@ -220,7 +230,7 @@ const IDCardPreviewPanel = ({
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                     <button
                         type="button"
-                        onClick={downloadFrontPNG}
+                        onClick={downloadFrontJPG}
                         disabled={downloading}
                         id="downloadFrontSideBtn"
                         style={{
@@ -238,12 +248,12 @@ const IDCardPreviewPanel = ({
                             gap: '6px'
                         }}
                     >
-                        Front Side (PNG)
+                        Front Side (JPG)
                     </button>
 
                     <button
                         type="button"
-                        onClick={downloadBackPNG}
+                        onClick={downloadBackJPG}
                         disabled={downloading}
                         id="downloadBackSideBtn"
                         style={{
@@ -261,7 +271,7 @@ const IDCardPreviewPanel = ({
                             gap: '6px'
                         }}
                     >
-                        Back Side (PNG)
+                        Back Side (JPG)
                     </button>
                 </div>
             </div>
