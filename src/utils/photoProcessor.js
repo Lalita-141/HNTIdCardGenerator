@@ -227,10 +227,66 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
         // 3. Remove stray background dots/artifacts and defringe edges
         const refinedCanvas = removeStrayArtifactsAndDefringe(rawCutoutImg);
 
-        // 4. Frame it passport-style on high-resolution canvas with EXACT template green background (#c8eec7)
+        // 4. Intelligent Passport Framing with Headroom & Subject Detection
         onProgress?.('Framing photo...');
-        const targetW = 750;
-        const targetH = 660;
+
+        const rw = refinedCanvas.width;
+        const rh = refinedCanvas.height;
+        const rctx = refinedCanvas.getContext('2d', { willReadFrequently: true });
+        const rImgData = rctx.getImageData(0, 0, rw, rh);
+        const rData = rImgData.data;
+
+        // Detect non-transparent subject bounding box
+        let minX = rw, maxX = 0, minY = rh, maxY = 0;
+        let hasSubject = false;
+        for (let y = 0; y < rh; y++) {
+            for (let x = 0; x < rw; x++) {
+                if (rData[(y * rw + x) * 4 + 3] > 30) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                    hasSubject = true;
+                }
+            }
+        }
+
+        if (!hasSubject) {
+            minX = 0; maxX = rw; minY = 0; maxY = rh;
+        }
+
+        const subjectW = Math.max(1, maxX - minX);
+        const subjectCenterX = (minX + maxX) / 2;
+
+        // Standard card photo viewport is 250px × 220px (scale 3x = 750px × 660px)
+        const viewW = 750;
+        const viewH = 660;
+
+        // Natural passport headroom: top of hair ~6-8% of viewport height (~45px)
+        const targetHeadroom = Math.round(viewH * 0.07);
+
+        // Scale calculation:
+        // Ensure shoulders span comfortably across the card (~80-86% of viewW)
+        const scaleByWidth = (viewW * 0.84) / subjectW;
+        const minScaleToFill = viewW / rw;
+        const scale = Math.max(minScaleToFill, Math.min(scaleByWidth, minScaleToFill * 1.5));
+
+        const drawW = rw * scale;
+        const drawH = rh * scale;
+
+        // Center horizontally on the subject's face/body center
+        const drawX = (viewW / 2) - (subjectCenterX * scale);
+
+        // Align top of hair (minY) to targetHeadroom so face is positioned in the upper-middle
+        const drawY = targetHeadroom - (minY * scale);
+
+        // Preserve full torso & shoulders:
+        // Do NOT chop off the bottom at 660px! Extend canvas so all visible clothing & torso
+        // are preserved plus extra buffer. This allows the user to adjust/move the photo upward
+        // without ever encountering a cut-off chest or collar.
+        const neededHeightForSubject = Math.ceil(drawY + (maxY * scale) + 160);
+        const targetH = Math.max(viewH, neededHeightForSubject);
+        const targetW = viewW;
 
         const canvas = document.createElement('canvas');
         canvas.width = targetW;
@@ -243,15 +299,7 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
         ctx.fillStyle = '#c8eec7';
         ctx.fillRect(0, 0, targetW, targetH);
 
-        // Scale so the subject fills the frame prominently (passport portrait framing)
-        const scale = Math.max(targetW / refinedCanvas.width, targetH / refinedCanvas.height);
-        const drawW = refinedCanvas.width * scale;
-        const drawH = refinedCanvas.height * scale;
-
-        // Horizontally centered, aligned towards top so face & hair are prominent with comfortable headroom
-        const drawX = (targetW - drawW) / 2;
-        const drawY = 0;
-
+        // Draw the subject
         ctx.drawImage(refinedCanvas, drawX, drawY, drawW, drawH);
 
         const finalDataUrl = canvas.toDataURL('image/png');

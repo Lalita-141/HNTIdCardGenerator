@@ -221,7 +221,7 @@ const IDCardPreviewPanel = ({
             </div>
 
             {/* Download buttons & format options */}
-            <div className="ipp__actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%', maxWidth: '720px' }}>
+            <div className="ipp__actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%', }}>
 
                 {/* Format selection pill */}
                 <div style={{
@@ -277,6 +277,92 @@ const IDCardPreviewPanel = ({
                     </button>
                 </div>
 
+                {/* Secondary buttons: Individual side downloads */}
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <button
+                        type="button"
+                        onClick={downloadFront}
+                        disabled={downloading}
+                        id="downloadFrontSideBtn"
+                        style={{
+                            height: '38px',
+                            padding: '0 16px',
+                            background: '#ffffff',
+                            color: '#374151',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                        }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Front Side ({exportFormat.toUpperCase()})
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={downloadBack}
+                        disabled={downloading}
+                        id="downloadBackSideBtn"
+                        style={{
+                            height: '38px',
+                            padding: '0 16px',
+                            background: '#ffffff',
+                            color: '#374151',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                        }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Back Side ({exportFormat.toUpperCase()})
+                    </button>
+
+                    {/* <button
+                        type="button"
+                        onClick={downloadBothSeparately}
+                        disabled={downloading}
+                        id="downloadBothSeparatelyBtn"
+                        style={{
+                            height: '38px',
+                            padding: '0 16px',
+                            background: '#f0fdf4',
+                            color: '#166534',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                        }}
+                        title="Download both sides as separate files at once"
+                    >
+                        Both Sides (2 Files)
+                    </button> */}
+                </div>
+
                 {/* Primary: Front + Back */}
                 <button
                     className={`ipp__download-btn ${downloading ? 'ipp__download-btn--loading' : ''}`}
@@ -302,81 +388,7 @@ const IDCardPreviewPanel = ({
                     )}
                 </button>
 
-                {/* Secondary buttons: Individual side downloads */}
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <button
-                        type="button"
-                        onClick={downloadFront}
-                        disabled={downloading}
-                        id="downloadFrontSideBtn"
-                        style={{
-                            height: '38px',
-                            padding: '0 16px',
-                            background: '#ffffff',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '8px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                        }}
-                    >
-                        Front Side ({exportFormat.toUpperCase()})
-                    </button>
 
-                    <button
-                        type="button"
-                        onClick={downloadBack}
-                        disabled={downloading}
-                        id="downloadBackSideBtn"
-                        style={{
-                            height: '38px',
-                            padding: '0 16px',
-                            background: '#ffffff',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '8px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                        }}
-                    >
-                        Back Side ({exportFormat.toUpperCase()})
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={downloadBothSeparately}
-                        disabled={downloading}
-                        id="downloadBothSeparatelyBtn"
-                        style={{
-                            height: '38px',
-                            padding: '0 16px',
-                            background: '#f0fdf4',
-                            color: '#166534',
-                            border: '1px solid #bbf7d0',
-                            borderRadius: '8px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                        }}
-                        title="Download both sides as separate files at once"
-                    >
-                        Both Sides (2 Files)
-                    </button>
-                </div>
             </div>
         </div>
     );
