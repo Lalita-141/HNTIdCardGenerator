@@ -266,10 +266,13 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
         const targetHeadroom = Math.round(viewH * 0.07);
 
         // Scale calculation:
-        // Ensure shoulders span comfortably across the card (~80-86% of viewW)
+        // 1. Ensure shoulders span comfortably across the card (~80-86% of viewW)
+        const subjectH = Math.max(1, maxY - minY);
         const scaleByWidth = (viewW * 0.84) / subjectW;
         const minScaleToFill = viewW / rw;
-        const scale = Math.max(minScaleToFill, Math.min(scaleByWidth, minScaleToFill * 1.5));
+        // 2. Ensure clothing/torso extends all the way down to the bottom of the card viewport (viewH)
+        const minScaleForHeight = (viewH - targetHeadroom) / subjectH;
+        const scale = Math.max(minScaleToFill, Math.max(scaleByWidth, minScaleForHeight));
 
         const drawW = rw * scale;
         const drawH = rh * scale;
@@ -278,15 +281,16 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
         const drawX = (viewW / 2) - (subjectCenterX * scale);
 
         // Align top of hair (minY) to targetHeadroom so face is positioned in the upper-middle
-        const drawY = targetHeadroom - (minY * scale);
+        let drawY = targetHeadroom - (minY * scale);
 
-        // Preserve full torso & shoulders:
-        // Do NOT chop off the bottom at 660px! Extend canvas so all visible clothing & torso
-        // are preserved plus extra buffer. This allows the user to adjust/move the photo upward
-        // without ever encountering a cut-off chest or collar.
-        const neededHeightForSubject = Math.ceil(drawY + (maxY * scale) + 160);
-        const targetH = Math.max(viewH, neededHeightForSubject);
+        // Ensure the torso extends to the bottom of the card frame (no empty gap below clothing)
+        if (drawY + (maxY * scale) < viewH) {
+            drawY = viewH - (maxY * scale);
+        }
+
+        // Exact 750px × 660px canvas matching the card photo container 250px × 220px (1:1 aspect ratio)
         const targetW = viewW;
+        const targetH = viewH;
 
         const canvas = document.createElement('canvas');
         canvas.width = targetW;

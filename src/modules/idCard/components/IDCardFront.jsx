@@ -234,13 +234,13 @@ const IDCardFront = ({
                         )}
 
                         {isProcessingPhoto && (
-                            <div className="idc__photo-processing">
+                            <div className="idc__photo-processing" data-html2canvas-ignore="true">
                                 <span className="idc__photo-spinner" />
                             </div>
                         )}
                     </>
                 ) : isProcessingPhoto ? (
-                    <div className="idc__photo-processing">
+                    <div className="idc__photo-processing" data-html2canvas-ignore="true">
                         <span className="idc__photo-spinner" />
                     </div>
                 ) : (
