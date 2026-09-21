@@ -19,20 +19,22 @@ function triggerDownload(dataUrl, filename) {
  * Also strokes a crisp subtle border along the curve so the boundary is visible against any surface.
  */
 function clipToCurvedCard(sourceCanvas, radius = 48, isJpg = false) {
-    const w = sourceCanvas.width;
-    const h = sourceCanvas.height;
+    const cardW = sourceCanvas.width;
+    const cardH = sourceCanvas.height;
+
+    // Zero padding: tightly cropped to exact card boundaries with no outer white margins
     const outCanvas = document.createElement('canvas');
-    outCanvas.width = w;
-    outCanvas.height = h;
+    outCanvas.width = cardW;
+    outCanvas.height = cardH;
     const ctx = outCanvas.getContext('2d');
 
-    // For JPG, fill outer background with pure clean white (#ffffff) to prevent black/yellow transparent artifacts.
+    // For JPG, fill with clean white (since JPEG spec has no alpha channel)
     // For PNG, keep outer corners 100% transparent.
     if (isJpg) {
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, w, h);
+        ctx.fillRect(0, 0, cardW, cardH);
     } else {
-        ctx.clearRect(0, 0, w, h);
+        ctx.clearRect(0, 0, cardW, cardH);
     }
 
     const drawCardPath = (x, y, width, height, r) => {
@@ -51,16 +53,16 @@ function clipToCurvedCard(sourceCanvas, radius = 48, isJpg = false) {
 
     // 1. Clip and draw card content with rounded corners
     ctx.save();
-    drawCardPath(0, 0, w, h, radius);
+    drawCardPath(0, 0, cardW, cardH, radius);
     ctx.clip();
-    ctx.drawImage(sourceCanvas, 0, 0, w, h);
+    ctx.drawImage(sourceCanvas, 0, 0, cardW, cardH);
     ctx.restore();
 
     // 2. Stroke subtle border along the rounded contour so the curve is clearly defined
-    const strokeWidth = Math.max(1, Math.round(w / 344)); // ~3px at scale 3
+    const strokeWidth = Math.max(1, Math.round(cardW / 344)); // ~3px at scale 3
     const halfStroke = strokeWidth / 2;
     ctx.save();
-    drawCardPath(halfStroke, halfStroke, w - strokeWidth, h - strokeWidth, Math.max(0, radius - halfStroke));
+    drawCardPath(halfStroke, halfStroke, cardW - strokeWidth, cardH - strokeWidth, Math.max(0, radius - halfStroke));
     ctx.strokeStyle = '#e2e8f0'; // Clean crisp subtle outline matching preview border
     ctx.lineWidth = strokeWidth;
     ctx.stroke();
@@ -295,7 +297,7 @@ const IDCardPreviewPanel = ({
                         }}
                     >
                         <span>PNG</span>
-                        <span style={{ fontSize: '10px', opacity: 0.9 }}>(Curved · No White Box)</span>
+                        <span style={{ fontSize: '10px', opacity: 0.9 }}>(Transparent Corners)</span>
                     </button>
                     <button
                         type="button"
@@ -316,7 +318,7 @@ const IDCardPreviewPanel = ({
                         }}
                     >
                         <span>JPG</span>
-                        <span style={{ fontSize: '10px', opacity: 0.9 }}>(Curved · No White Box)</span>
+                        <span style={{ fontSize: '10px', opacity: 0.9 }}>(Curved)</span>
                     </button>
                 </div>
 
