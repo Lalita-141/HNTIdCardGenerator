@@ -111,8 +111,8 @@ const IDCardPreviewPanel = ({
                     const nw = origImg.naturalWidth;
                     const nh = origImg.naturalHeight;
                     const wrap = origImg.parentElement;
-                    const cw = wrap ? wrap.offsetWidth : 250;
-                    const ch = wrap ? wrap.offsetHeight : 220;
+                    const cw = wrap ? wrap.offsetWidth : 264;
+                    const ch = wrap ? wrap.offsetHeight : 247;
 
                     const s = Math.max(cw / nw, ch / nh);
                     const rw = nw * s;

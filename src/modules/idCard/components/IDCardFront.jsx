@@ -1,23 +1,14 @@
 import React from 'react';
-import hareTurtleLogoFigma from '../../../assets/logo-svg.svg';
+import cardFrontTemplate from '../../../assets/card_front_template.png';
+import verticalGradientColumn from '../../../assets/vertical_gradient_column.png';
 import { formatProfileImage } from '../../../utils/imageUtils';
 import './IDCard.css';
 
 /**
- * IDCardFront — 100% exact match to Figma design:
- *   - Logo header: exact Figma logo asset (254px × 52px at x=42, y=24)
- *   - Geometric photo section:
- *       orange block: x=22, y=119, w=60, h=59
- *       photo area: x=42, y=136, w=263, h=183 (mint green when present, solid gray when absent)
- *       gradient column: x=241, y=136, w=68, h=243
- *       royal blue accent: x=302, y=349, w=19, h=60
- *       translucent green box: x=242, y=379, w=60, h=56
- *   - Employee Info:
- *       Name at x=43, y=351
- *       Staff ID at x=43, y=388
- *       Blood Group at x=175, y=388
- *   - Footer:
- *       Velocity X Innovation | hareandturtle.ai at y=509..520
+ * IDCardFront — Uses official designer template image as background,
+ * overlays employee photo (interactive drag & zoom), renders the semi-transparent
+ * vertical gradient column over the photo so the subject remains visible behind it,
+ * and displays live API employee information (Name, Staff ID, Blood Group).
  */
 const IDCardFront = ({
     employee,
@@ -155,19 +146,15 @@ const IDCardFront = ({
 
     return (
         <div className="idc idc--front" ref={cardRef}>
-            {/* Header with exact Figma logo */}
-            <div className="idc__header">
-                <img
-                    src={hareTurtleLogoFigma}
-                    alt="Hare & Turtle AI Solutions"
-                    className="idc__logo-img"
-                />
-            </div>
+            {/* Template Background Image (Logo, Orange Accent, Mint Frame, Bottom Blocks & Footer) */}
+            <img
+                src={cardFrontTemplate}
+                alt="ID Card Front Template"
+                className="idc__bg-template"
+                draggable={false}
+            />
 
-            {/* Orange block behind top-left of photo */}
-            <div className="geo geo--orange" />
-
-            {/* Photo wrap with interactive drag & zoom */}
+            {/* Photo wrap with interactive drag & zoom (sits behind the vertical gradient column) */}
             <div
                 ref={photoWrapRef}
                 className={`idc__photo-wrap ${!hasValidPhoto && !isProcessingPhoto ? 'idc__photo-wrap--empty' : ''} ${hasValidPhoto ? 'idc__photo-wrap--interactive' : ''} ${isDragging ? 'idc__photo-wrap--dragging' : ''}`}
@@ -192,7 +179,7 @@ const IDCardFront = ({
                             }}
                         />
 
-                        {/* Interactive floating toolbar (ignored during JPG export) */}
+                        {/* Interactive floating toolbar (ignored during JPG/PNG export) */}
                         {!isProcessingPhoto && (
                             <div className="idc__photo-toolbar" data-html2canvas-ignore="true">
                                 <button
@@ -244,20 +231,19 @@ const IDCardFront = ({
                         <span className="idc__photo-spinner" />
                     </div>
                 ) : (
-                    <div className="idc__photo-placeholder idc__photo-placeholder--gray" />
+                    <div className="idc__photo-placeholder" />
                 )}
             </div>
 
-            {/* Royal blue accent block (behind gradient) */}
-            <div className="geo geo--blue-sm" />
+            {/* Transparent vertical gradient column overlay — sits above photo, so photo is visible behind it */}
+            <img
+                src={verticalGradientColumn}
+                alt=""
+                className="idc__gradient-col"
+                draggable={false}
+            />
 
-            {/* Vertical gradient column on right side (semi-transparent) */}
-            <div className="geo geo--gradient" />
-
-            {/* Translucent green overlay box */}
-            {/* <div className="geo geo--green-sm" /> */}
-
-            {/* Employee Info */}
+            {/* Employee Info from API */}
             <div className="idc__info">
                 <p className="idc__name">{displayName}</p>
                 <div className="idc__meta">
@@ -265,16 +251,8 @@ const IDCardFront = ({
                     <span className="idc__blood">{displayBloodGroup}</span>
                 </div>
             </div>
-
-            {/* Footer */}
-            <div className="idc__footer">
-                <span className="idc__footer-left">Velocity X Innovation</span>
-                <span className="idc__footer-right">hareandturtle.ai</span>
-            </div>
         </div>
     );
 };
 
 export default IDCardFront;
-
-
