@@ -13,28 +13,39 @@ function triggerDownload(dataUrl, filename) {
     document.body.removeChild(link);
 }
 
-/**
- * Clips canvas to exact card rounded corners (border-radius: 16px * scale = 48px)
- * leaving corners 100% transparent so no outer white box or square corners exist.
- * Also strokes a crisp subtle border along the curve so the boundary is visible against any surface.
- */
-function clipToCurvedCard(sourceCanvas, radius = 48, isJpg = false) {
-    const cardW = sourceCanvas.width;
-    const cardH = sourceCanvas.height;
+// Exact 300 DPI CR80 PVC card standard dimensions (54mm × 85.6mm / 2.125" × 3.375")
+export const CARD_EXPORT_WIDTH = 638;
+export const CARD_EXPORT_HEIGHT = 1011;
+export const CARD_CORNER_RADIUS = 36; // 3.18mm standard CR80 corner radius at 300 DPI
 
-    // Zero padding: tightly cropped to exact card boundaries with no outer white margins
+/**
+ * Clips canvas to exact 638×1011 card rounded corners.
+ * For PNG: corners remain 100% transparent (no outer white box or square edges).
+ * For JPG: corners are filled with clean white.
+ * Also strokes a crisp subtle border along the curve for clear boundary definition.
+ */
+function clipToCurvedCard(
+    sourceCanvas,
+    targetW = CARD_EXPORT_WIDTH,
+    targetH = CARD_EXPORT_HEIGHT,
+    radius = CARD_CORNER_RADIUS,
+    isJpg = false
+) {
+    // Exact target dimensions: tightly cropped with no outer margins
     const outCanvas = document.createElement('canvas');
-    outCanvas.width = cardW;
-    outCanvas.height = cardH;
+    outCanvas.width = targetW;
+    outCanvas.height = targetH;
     const ctx = outCanvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // For JPG, fill with clean white (since JPEG spec has no alpha channel)
     // For PNG, keep outer corners 100% transparent.
     if (isJpg) {
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, cardW, cardH);
+        ctx.fillRect(0, 0, targetW, targetH);
     } else {
-        ctx.clearRect(0, 0, cardW, cardH);
+        ctx.clearRect(0, 0, targetW, targetH);
     }
 
     const drawCardPath = (x, y, width, height, r) => {
@@ -51,18 +62,18 @@ function clipToCurvedCard(sourceCanvas, radius = 48, isJpg = false) {
         }
     };
 
-    // 1. Clip and draw card content with rounded corners
+    // 1. Clip and draw card content scaled cleanly to 638x1011 with rounded corners
     ctx.save();
-    drawCardPath(0, 0, cardW, cardH, radius);
+    drawCardPath(0, 0, targetW, targetH, radius);
     ctx.clip();
-    ctx.drawImage(sourceCanvas, 0, 0, cardW, cardH);
+    ctx.drawImage(sourceCanvas, 0, 0, targetW, targetH);
     ctx.restore();
 
     // 2. Stroke subtle border along the rounded contour so the curve is clearly defined
-    const strokeWidth = Math.max(1, Math.round(cardW / 344)); // ~3px at scale 3
+    const strokeWidth = 2; // ~2px crisp stroke at 638x1011
     const halfStroke = strokeWidth / 2;
     ctx.save();
-    drawCardPath(halfStroke, halfStroke, cardW - strokeWidth, cardH - strokeWidth, Math.max(0, radius - halfStroke));
+    drawCardPath(halfStroke, halfStroke, targetW - strokeWidth, targetH - strokeWidth, Math.max(0, radius - halfStroke));
     ctx.strokeStyle = '#e2e8f0'; // Clean crisp subtle outline matching preview border
     ctx.lineWidth = strokeWidth;
     ctx.stroke();
@@ -118,7 +129,7 @@ const IDCardPreviewPanel = ({
                 }
             }
         });
-        return clipToCurvedCard(rawCanvas, 16 * scale, isJpg);
+        return clipToCurvedCard(rawCanvas, CARD_EXPORT_WIDTH, CARD_EXPORT_HEIGHT, CARD_CORNER_RADIUS, isJpg);
     };
 
     const getEmployeeSlug = () => {
@@ -132,7 +143,7 @@ const IDCardPreviewPanel = ({
         setDownloading(true);
         try {
             const isJpg = exportFormat === 'jpg';
-            const curvedCanvas = await renderCardCanvas(frontRef.current, 3, isJpg);
+            const curvedCanvas = await renderCardCanvas(frontRef.current, 2.5, isJpg);
             const empName = getEmployeeSlug();
             const ext = exportFormat;
             const fname = `IDCard_${empName}_Front.${ext}`;
@@ -152,7 +163,7 @@ const IDCardPreviewPanel = ({
         setDownloading(true);
         try {
             const isJpg = exportFormat === 'jpg';
-            const curvedCanvas = await renderCardCanvas(backRef.current, 3, isJpg);
+            const curvedCanvas = await renderCardCanvas(backRef.current, 2.5, isJpg);
             const empName = getEmployeeSlug();
             const ext = exportFormat;
             const fname = `IDCard_${empName}_Back.${ext}`;
@@ -173,11 +184,11 @@ const IDCardPreviewPanel = ({
         try {
             const isJpg = exportFormat === 'jpg';
             const [frontCurved, backCurved] = await Promise.all([
-                renderCardCanvas(frontRef.current, 3, isJpg),
-                renderCardCanvas(backRef.current, 3, isJpg),
+                renderCardCanvas(frontRef.current, 2.5, isJpg),
+                renderCardCanvas(backRef.current, 2.5, isJpg),
             ]);
 
-            // Side-by-side layout: exact cards with a clean gap
+            // Side-by-side layout: exact 638x1011 cards with a clean gap
             const gap = 36;
             const totalW = frontCurved.width + backCurved.width + gap;
             const totalH = Math.max(frontCurved.height, backCurved.height);
@@ -186,6 +197,8 @@ const IDCardPreviewPanel = ({
             compCanvas.width = totalW;
             compCanvas.height = totalH;
             const ctx = compCanvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
 
             if (isJpg) {
                 ctx.fillStyle = '#ffffff';
@@ -215,8 +228,8 @@ const IDCardPreviewPanel = ({
         try {
             const isJpg = exportFormat === 'jpg';
             const [frontCurved, backCurved] = await Promise.all([
-                renderCardCanvas(frontRef.current, 3, isJpg),
-                renderCardCanvas(backRef.current, 3, isJpg),
+                renderCardCanvas(frontRef.current, 2.5, isJpg),
+                renderCardCanvas(backRef.current, 2.5, isJpg),
             ]);
             const empName = getEmployeeSlug();
             const ext = exportFormat;
@@ -237,9 +250,30 @@ const IDCardPreviewPanel = ({
     return (
         <div className="ipp">
             {/* Panel header */}
-            <div className="ipp__header">
-                <h2 className="ipp__title">ID Card Preview</h2>
-                <p className="ipp__subtitle">Front and back view will be generated automatically.</p>
+            <div className="ipp__header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                    <h2 className="ipp__title">ID Card Preview</h2>
+                    <p className="ipp__subtitle">Front and back view will be generated automatically.</p>
+                </div>
+                <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '11.5px',
+                    fontWeight: '600',
+                    color: '#15803d',
+                    background: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    letterSpacing: '0.2px',
+                }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="9" y1="3" x2="9" y2="21"/>
+                    </svg>
+                    Export Size: 638 × 1011 px (CR80)
+                </div>
             </div>
 
             {/* Cards side by side */}
@@ -289,7 +323,7 @@ const IDCardPreviewPanel = ({
                             fontSize: '12px',
                             fontWeight: '600',
                             transition: 'all 0.2s ease',
-                            background: exportFormat === 'png' ? '#188f16' : 'transparent',
+                            background: exportFormat === 'png' ? '#2A9246' : 'transparent',
                             color: exportFormat === 'png' ? '#ffffff' : '#64748b',
                             display: 'flex',
                             alignItems: 'center',
@@ -310,7 +344,7 @@ const IDCardPreviewPanel = ({
                             fontSize: '12px',
                             fontWeight: '600',
                             transition: 'all 0.2s ease',
-                            background: exportFormat === 'jpg' ? '#188f16' : 'transparent',
+                            background: exportFormat === 'jpg' ? '#2A9246' : 'transparent',
                             color: exportFormat === 'jpg' ? '#ffffff' : '#64748b',
                             display: 'flex',
                             alignItems: 'center',

@@ -350,7 +350,7 @@
 }
 
 .efp__adjust-title svg {
-    color: #188F16;
+    color: #2A9246;
 }
 
 .efp__adjust-reset-btn {
@@ -366,9 +366,8 @@
 }
 
 .efp__adjust-reset-btn:hover {
-    background: #fee2e2;
-    color: #dc2626;
-    border-color: #fca5a5;
+    background: #e5e7eb;
+    color: #111827;
 }
 
 .efp__adjust-row {
@@ -385,16 +384,16 @@
     min-width: 48px;
 }
 
-.efp__zoom-control {
+/* Zoom Row */
+.efp__zoom-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex: 1;
 }
 
 .efp__zoom-step-btn {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -405,14 +404,15 @@
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
     transition: all 0.15s ease;
 }
 
 .efp__zoom-step-btn:hover {
-    background: #188F16;
+    background: #2A9246;
     color: #ffffff;
-    border-color: #188F16;
+    border-color: #2A9246;
 }
 
 .efp__zoom-slider {
@@ -432,7 +432,7 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #188F16;
+    background: #2A9246;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
     transition: transform 0.1s ease;
@@ -447,7 +447,7 @@
     height: 16px;
     border: none;
     border-radius: 50%;
-    background: #188F16;
+    background: #2A9246;
     cursor: pointer;
 }
 
@@ -505,9 +505,9 @@
 }
 
 .efp__nudge-btn:hover {
-    background: #188F16;
+    background: #2A9246;
     color: #ffffff;
-    border-color: #188F16;
+    border-color: #2A9246;
 }
 
 .efp__nudge-center {

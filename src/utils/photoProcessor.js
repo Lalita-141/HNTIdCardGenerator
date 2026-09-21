@@ -299,8 +299,8 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        // Fill background with exact template light green (#c8eec7)
-        ctx.fillStyle = '#c8eec7';
+        // Fill background with exact template light green (#C7EDC7)
+        ctx.fillStyle = '#C7EDC7';
         ctx.fillRect(0, 0, targetW, targetH);
 
         // Draw the subject

@@ -53,7 +53,7 @@
     left: 22px;
     width: 60px;
     height: 59px;
-    background: #ff9934;
+    background: #FF9933;
     z-index: 1;
 }
 
@@ -64,14 +64,14 @@
     left: 42px;
     width: 250px;
     height: 220px;
-    background: #c8eec7;
+    background: #C7EDC7;
     z-index: 2;
     overflow: hidden;
 }
 
-/* Fill when image is not present — matches template green #c8eec7 */
+/* Fill when image is not present — matches template green #C7EDC7 */
 .idc__photo-wrap--empty {
-    background: #c8eec7;
+    background: #C7EDC7;
 }
 
 .idc__photo-wrap--interactive {
@@ -90,7 +90,7 @@
     object-fit: cover;
     object-position: center top;
     display: block;
-    background: #c8eec7;
+    background: #C7EDC7;
     pointer-events: none;
     user-select: none;
     -webkit-user-drag: none;
@@ -142,7 +142,7 @@
 }
 
 .idc__photo-btn:hover {
-    background: #188F16;
+    background: #2A9246;
     color: #ffffff;
     transform: scale(1.05);
 }
@@ -197,14 +197,14 @@
 .idc__photo-placeholder--gray {
     width: 100%;
     height: 100%;
-    background: #c8eec7;
+    background: #C7EDC7;
 }
 
 /* Processing spinner on ID card photo */
 .idc__photo-processing {
     position: absolute;
     inset: 0;
-    background: rgba(200, 238, 199, 0.7);
+    background: rgba(199, 237, 199, 0.7);
     backdrop-filter: blur(1.5px);
     display: flex;
     align-items: center;
@@ -215,8 +215,8 @@
 .idc__photo-spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid rgba(24, 143, 22, 0.25);
-    border-top-color: #188F16;
+    border: 3px solid rgba(42, 146, 70, 0.25);
+    border-top-color: #2A9246;
     border-radius: 50%;
     animation: idcSpin 0.75s linear infinite;
 }
@@ -233,18 +233,23 @@
     left: 260px;
     width: 44px;
     height: 52px;
-    background: #313CD4;
+    background: #313BD4;
     z-index: 1;
 }
 
 /* Semi-transparent vertical gradient column on right side (x=241, y=136, w=68, h=243)
-   Allows the photo underneath and the blue block behind it to be visible through the gradient */
+   Designer CMYK values:
+     0%:   CMYK(99%, 100%, 0%, 50%) -> #010080
+     40%:  CMYK(52%, 0%, 13%, 53%)  -> #3A7868
+     70%:  CMYK(59%, 0%, 47%, 37%)  -> #41A055
+     100%: CMYK(70%, 0%, 71%, 31%)  -> #35AF33
+*/
 .geo--gradient {
     top: 136px;
     left: 242px;
     width: 50px;
     height: 280px;
-    background: linear-gradient(180deg, #010080 0%, rgba(58, 120, 105, 0.76) 40%, rgba(65, 160, 85, 0.76) 70%, #35AF33 100%);
+    background: linear-gradient(180deg, #010080 0%, #3A7868 40%, #41A055 70%, #35AF33 100%);
     z-index: 3;
     pointer-events: none;
     opacity: 65%;
@@ -293,14 +298,14 @@
 .idc__staff-id {
     font-size: 18px;
     font-weight: 600;
-    color: #5D5D5D;
+    color: #5C5C5C;
     letter-spacing: 0.2px;
 }
 
 .idc__blood {
     font-size: 18px;
     font-weight: 600;
-    color: #5D5D5D;
+    color: #5C5C5C;
 }
 
 /* --- Footer (y=509..520, left=25, right=25) --- */
@@ -318,7 +323,7 @@
 .idc__footer span {
     font-size: 13px;
     font-weight: 600;
-    color: #188F16;
+    color: #2A9246;
     letter-spacing: 0.1px;
     text-transform: none;
 }
@@ -337,7 +342,7 @@
 .idc-back__box-wrap {
     margin: 28px 21px 0;
     padding: 2px;
-    background: linear-gradient(135deg, #ff912a 0%, #ff912a 62%, #16a34a 100%);
+    background: linear-gradient(135deg, #FF9933 0%, #FF9933 62%, #2A9246 100%);
     border-radius: 18px;
     box-sizing: border-box;
 }
@@ -353,7 +358,7 @@
 
 .idc-back__belongs-to {
     font-size: 14px;
-    color: #188F16;
+    color: #2A9246;
     font-weight: 600;
     line-height: 1.45;
     font-style: unset;
@@ -370,7 +375,7 @@
     font-size: 14px;
     font-style: italic;
     font-weight: 700;
-    color: #188F16;
+    color: #2A9246;
     margin: 0;
     line-height: 1.3;
 }
@@ -388,9 +393,14 @@
 
 .idc-back__detail span {
     font-size: 13.5px;
-    color: #374151;
+    color: #000000;
     line-height: 1.45;
     font-weight: 500;
+}
+
+.idc-back__website-link {
+    color: #2A9246 !important;
+    font-weight: 600;
 }
 
 /* Bottom centered logo (no top divider border) */
