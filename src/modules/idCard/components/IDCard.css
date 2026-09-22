@@ -44,7 +44,7 @@
     left: 12.0%;
     width: 76.8%;
     height: 45.1%;
-    background: transparent;
+    background: #c8e4c3;
     z-index: 2;
     overflow: hidden;
 }
@@ -193,7 +193,7 @@
 .idc__photo-processing {
     position: absolute;
     inset: 0;
-    background: rgba(199, 237, 199, 0.7);
+    background: rgba(200, 228, 195, 0.75);
     backdrop-filter: blur(1.5px);
     display: flex;
     align-items: center;

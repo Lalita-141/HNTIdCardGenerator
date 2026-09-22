@@ -186,7 +186,7 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
     const trimmed = imageSrc.trim();
     if (!trimmed) return null;
 
-    const cacheKey = trimmed.slice(0, 200) + '_' + trimmed.length;
+    const cacheKey = 'v3_transparent_' + trimmed.slice(0, 200) + '_' + trimmed.length;
     if (cache.has(cacheKey)) {
         return cache.get(cacheKey);
     }
@@ -299,9 +299,8 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        // Fill background with exact template light green (#C7EDC7)
-        ctx.fillStyle = '#C7EDC7';
-        ctx.fillRect(0, 0, targetW, targetH);
+        // Keep canvas transparent so repositioning and zooming don't create mismatched background edges
+        ctx.clearRect(0, 0, targetW, targetH);
 
         // Draw the subject
         ctx.drawImage(refinedCanvas, drawX, drawY, drawW, drawH);

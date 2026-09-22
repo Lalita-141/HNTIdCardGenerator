@@ -98,7 +98,7 @@
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: #f3f4f6;
+    background: #c8e4c3;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -198,6 +198,7 @@
     border-radius: 6px;
     object-fit: cover;
     object-position: top;
+    background: #c8e4c3;
 }
 
 .efp__upload-change {
