@@ -27,6 +27,12 @@
     align-self: stretch;
     display: flex;
     flex-direction: column;
+    transition: width 0.2s ease;
+}
+
+.icp__panel--bulk {
+    width: 450px;
+    min-width: 360px;
 }
 
 .icp__panel--right {

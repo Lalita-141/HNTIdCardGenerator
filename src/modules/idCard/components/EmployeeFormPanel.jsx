@@ -16,6 +16,7 @@ const EmployeeFormPanel = ({
     isProcessingPhoto: _isProcessingPhoto,
     photoTransform = { zoom: 1, x: 0, y: 0 },
     onPhotoTransformChange,
+    onSwitchMode,
 }) => {
     const fileInputRef = useRef(null);
     const [avatarError, setAvatarError] = useState(false);
@@ -46,6 +47,37 @@ const EmployeeFormPanel = ({
 
     return (
         <div className="efp">
+            {/* Mode Switcher Tabs */}
+            {onSwitchMode && (
+                <div className="bep__tabs" style={{ marginBottom: '12px' }} role="tablist">
+                    <button
+                        type="button"
+                        className="bep__tab-btn bep__tab-btn--active"
+                        role="tab"
+                        aria-selected="true"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        Single Card
+                    </button>
+                    <button
+                        type="button"
+                        className="bep__tab-btn"
+                        onClick={() => onSwitchMode('bulk')}
+                        role="tab"
+                        aria-selected="false"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                        </svg>
+                        Bulk Generate
+                        <span className="bep__tab-badge">127</span>
+                    </button>
+                </div>
+            )}
+
             {/* Panel title */}
             <div className="efp__header">
                 <h1 className="efp__title">ID Card Generator</h1>

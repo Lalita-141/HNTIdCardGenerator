@@ -13,6 +13,7 @@
     "@imgly/background-removal": "^1.7.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
+    "jszip": "^3.10.2",
     "puppeteer": "^25.10.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

@@ -2,6 +2,7 @@ import { removeBackground } from '@imgly/background-removal';
 
 // Cache processed transparent images in memory for instant re-use
 const cache = new Map();
+const inFlightJobs = new Map();
 
 /**
  * Loads an image URL/data URL into an HTMLImageElement.
@@ -190,9 +191,13 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
     if (cache.has(cacheKey)) {
         return cache.get(cacheKey);
     }
+    if (inFlightJobs.has(cacheKey)) {
+        return inFlightJobs.get(cacheKey);
+    }
 
-    try {
-        onProgress?.('Loading photo...');
+    const job = (async () => {
+        try {
+            onProgress?.('Loading photo...');
         // Ensure image is loaded and converted to Data URL
         let inputDataUrl = trimmed;
         if (!trimmed.startsWith('data:image/')) {
@@ -313,5 +318,11 @@ export async function removeBgAndFramePassport(imageSrc, onProgress = null) {
     } catch (err) {
         console.error('Background removal failed, using original photo fallback:', err);
         return trimmed;
+    } finally {
+        inFlightJobs.delete(cacheKey);
     }
+    })();
+
+    inFlightJobs.set(cacheKey, job);
+    return job;
 }

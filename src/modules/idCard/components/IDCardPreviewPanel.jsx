@@ -1,86 +1,14 @@
 import React, { useRef, useState } from 'react';
-import html2canvas from 'html2canvas';
 import IDCardFront from './IDCardFront';
 import IDCardBack from './IDCardBack';
+import {
+    triggerDownload,
+    renderCardCanvas,
+    createCombinedCardCanvas,
+    createIdCardsPdf,
+    addEmployeeToPdf,
+} from '../../../utils/cardRenderer';
 import './IDCardPreviewPanel.css';
-
-function triggerDownload(dataUrl, filename) {
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = dataUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// Exact 300 DPI CR80 PVC card standard dimensions (54mm × 85.6mm / 2.125" × 3.375")
-export const CARD_EXPORT_WIDTH = 638;
-export const CARD_EXPORT_HEIGHT = 1011;
-export const CARD_CORNER_RADIUS = 36; // 3.18mm standard CR80 corner radius at 300 DPI
-
-/**
- * Clips canvas to exact 638×1011 card rounded corners.
- * For PNG: corners remain 100% transparent (no outer white box or square edges).
- * For JPG: corners are filled with clean white.
- * Also strokes a crisp subtle border along the curve for clear boundary definition.
- */
-function clipToCurvedCard(
-    sourceCanvas,
-    targetW = CARD_EXPORT_WIDTH,
-    targetH = CARD_EXPORT_HEIGHT,
-    radius = CARD_CORNER_RADIUS,
-    isJpg = false
-) {
-    // Exact target dimensions: tightly cropped with no outer margins
-    const outCanvas = document.createElement('canvas');
-    outCanvas.width = targetW;
-    outCanvas.height = targetH;
-    const ctx = outCanvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-
-    // For JPG, fill with clean white (since JPEG spec has no alpha channel)
-    // For PNG, keep outer corners 100% transparent.
-    if (isJpg) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, targetW, targetH);
-    } else {
-        ctx.clearRect(0, 0, targetW, targetH);
-    }
-
-    const drawCardPath = (x, y, width, height, r) => {
-        ctx.beginPath();
-        if (ctx.roundRect) {
-            ctx.roundRect(x, y, width, height, r);
-        } else {
-            ctx.moveTo(x + r, y);
-            ctx.arcTo(x + width, y, x + width, y + height, r);
-            ctx.arcTo(x + width, y + height, x, y + height, r);
-            ctx.arcTo(x, y + height, x, y, r);
-            ctx.arcTo(x, y, x + width, y, r);
-            ctx.closePath();
-        }
-    };
-
-    // 1. Clip and draw card content scaled cleanly to 638x1011 with rounded corners
-    ctx.save();
-    drawCardPath(0, 0, targetW, targetH, radius);
-    ctx.clip();
-    ctx.drawImage(sourceCanvas, 0, 0, targetW, targetH);
-    ctx.restore();
-
-    // 2. Stroke subtle border along the rounded contour so the curve is clearly defined
-    const strokeWidth = 2; // ~2px crisp stroke at 638x1011
-    const halfStroke = strokeWidth / 2;
-    ctx.save();
-    drawCardPath(halfStroke, halfStroke, targetW - strokeWidth, targetH - strokeWidth, Math.max(0, radius - halfStroke));
-    ctx.strokeStyle = '#e2e8f0'; // Clean crisp subtle outline matching preview border
-    ctx.lineWidth = strokeWidth;
-    ctx.stroke();
-    ctx.restore();
-
-    return outCanvas;
-}
 
 const IDCardPreviewPanel = ({
     employee,
@@ -89,48 +17,16 @@ const IDCardPreviewPanel = ({
     isProcessingPhoto,
     photoTransform,
     onPhotoTransformChange,
+    frontRef: externalFrontRef,
+    backRef: externalBackRef,
 }) => {
-    const frontRef = useRef(null);
-    const backRef = useRef(null);
+    const internalFrontRef = useRef(null);
+    const internalBackRef = useRef(null);
+    const frontRef = externalFrontRef || internalFrontRef;
+    const backRef = externalBackRef || internalBackRef;
+
     const [downloading, setDownloading] = useState(false);
     const [exportFormat, setExportFormat] = useState('jpg'); // 'png' (transparent curves) | 'jpg'
-
-    const renderCardCanvas = async (cardElement, scale = 3, isJpg = false) => {
-        const rawCanvas = await html2canvas(cardElement, {
-            scale,
-            useCORS: true,
-            backgroundColor: null,
-            logging: false,
-            onclone: (clonedDoc) => {
-                // html2canvas does not implement CSS object-fit: cover for <img> elements,
-                // causing images with different aspect ratios to be squished vertically.
-                // Here we calculate the exact cover geometry and set explicit position & size on the clone.
-                const origImg = cardElement.querySelector('.idc__photo-img');
-                const clonedImg = clonedDoc.querySelector('.idc__photo-img');
-                if (origImg && clonedImg && origImg.naturalWidth && origImg.naturalHeight) {
-                    const nw = origImg.naturalWidth;
-                    const nh = origImg.naturalHeight;
-                    const wrap = origImg.parentElement;
-                    const cw = wrap ? wrap.offsetWidth : 264;
-                    const ch = wrap ? wrap.offsetHeight : 247;
-
-                    const s = Math.max(cw / nw, ch / nh);
-                    const rw = nw * s;
-                    const rh = nh * s;
-                    const rx = (cw - rw) / 2;
-                    const ry = 0; // matching 'center top'
-
-                    clonedImg.style.position = 'absolute';
-                    clonedImg.style.left = `${rx}px`;
-                    clonedImg.style.top = `${ry}px`;
-                    clonedImg.style.width = `${rw}px`;
-                    clonedImg.style.height = `${rh}px`;
-                    clonedImg.style.objectFit = 'fill';
-                }
-            }
-        });
-        return clipToCurvedCard(rawCanvas, CARD_EXPORT_WIDTH, CARD_EXPORT_HEIGHT, CARD_CORNER_RADIUS, isJpg);
-    };
 
     const getEmployeeSlug = () => {
         return employee
@@ -188,28 +84,7 @@ const IDCardPreviewPanel = ({
                 renderCardCanvas(backRef.current, 2.5, isJpg),
             ]);
 
-            // Side-by-side layout: exact 638x1011 cards with a clean gap
-            const gap = 36;
-            const totalW = frontCurved.width + backCurved.width + gap;
-            const totalH = Math.max(frontCurved.height, backCurved.height);
-
-            const compCanvas = document.createElement('canvas');
-            compCanvas.width = totalW;
-            compCanvas.height = totalH;
-            const ctx = compCanvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-
-            if (isJpg) {
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, totalW, totalH);
-            } else {
-                ctx.clearRect(0, 0, totalW, totalH);
-            }
-
-            ctx.drawImage(frontCurved, 0, 0);
-            ctx.drawImage(backCurved, frontCurved.width + gap, 0);
-
+            const compCanvas = createCombinedCardCanvas(frontCurved, backCurved, 36, isJpg);
             const empName = getEmployeeSlug();
             const ext = exportFormat;
             const mime = isJpg ? 'image/jpeg' : 'image/png';
@@ -222,26 +97,21 @@ const IDCardPreviewPanel = ({
         }
     };
 
-    const downloadBothSeparately = async () => {
+    const downloadPdf = async () => {
         if (!frontRef.current || !backRef.current) return;
         setDownloading(true);
         try {
-            const isJpg = exportFormat === 'jpg';
             const [frontCurved, backCurved] = await Promise.all([
-                renderCardCanvas(frontRef.current, 2.5, isJpg),
-                renderCardCanvas(backRef.current, 2.5, isJpg),
+                renderCardCanvas(frontRef.current, 2.5, true),
+                renderCardCanvas(backRef.current, 2.5, true),
             ]);
+            const pdf = createIdCardsPdf('cr80');
+            addEmployeeToPdf(pdf, frontCurved, backCurved, true, 'cr80');
             const empName = getEmployeeSlug();
-            const ext = exportFormat;
-            const mime = isJpg ? 'image/jpeg' : 'image/png';
-
-            triggerDownload(frontCurved.toDataURL(mime, 0.98), `IDCard_${empName}_Front.${ext}`);
-            setTimeout(() => {
-                triggerDownload(backCurved.toDataURL(mime, 0.98), `IDCard_${empName}_Back.${ext}`);
-            }, 300);
+            pdf.save(`IDCard_${empName}.pdf`);
         } catch (err) {
-            console.error('Both cards download failed:', err);
-            alert('Could not download ID Cards. Please try again.');
+            console.error('PDF download failed:', err);
+            alert('Could not download PDF. Please try again.');
         } finally {
             setDownloading(false);
         }
@@ -300,7 +170,7 @@ const IDCardPreviewPanel = ({
             </div>
 
             {/* Download buttons & format options */}
-            <div className="ipp__actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%', }}>
+            <div className="ipp__actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%' }}>
 
                 {/* Format selection pill */}
                 <div style={{
@@ -356,7 +226,7 @@ const IDCardPreviewPanel = ({
                     </button>
                 </div>
 
-                {/* Secondary buttons: Individual side downloads */}
+                {/* Secondary buttons: Individual side downloads + PDF */}
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                     <button
                         type="button"
@@ -365,7 +235,7 @@ const IDCardPreviewPanel = ({
                         id="downloadFrontSideBtn"
                         style={{
                             height: '38px',
-                            padding: '0 16px',
+                            padding: '0 14px',
                             background: '#ffffff',
                             color: '#374151',
                             border: '1px solid #d1d5db',
@@ -380,7 +250,7 @@ const IDCardPreviewPanel = ({
                             opacity: (downloading || isProcessingPhoto) ? 0.6 : 1,
                         }}
                     >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                             <polyline points="7 10 12 15 17 10" />
                             <line x1="12" y1="15" x2="12" y2="3" />
@@ -395,7 +265,7 @@ const IDCardPreviewPanel = ({
                         id="downloadBackSideBtn"
                         style={{
                             height: '38px',
-                            padding: '0 16px',
+                            padding: '0 14px',
                             background: '#ffffff',
                             color: '#374151',
                             border: '1px solid #d1d5db',
@@ -410,12 +280,43 @@ const IDCardPreviewPanel = ({
                             opacity: (downloading || isProcessingPhoto) ? 0.6 : 1,
                         }}
                     >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                             <polyline points="7 10 12 15 17 10" />
                             <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
                         Back Side ({exportFormat.toUpperCase()})
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={downloadPdf}
+                        disabled={downloading || isProcessingPhoto}
+                        id="downloadSinglePdfBtn"
+                        style={{
+                            height: '38px',
+                            padding: '0 14px',
+                            background: '#f8fafc',
+                            color: '#0f766e',
+                            border: '1px solid #99f6e4',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            cursor: (downloading || isProcessingPhoto) ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                            opacity: (downloading || isProcessingPhoto) ? 0.6 : 1,
+                        }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                        </svg>
+                        Download PDF
                     </button>
                 </div>
 
@@ -448,13 +349,9 @@ const IDCardPreviewPanel = ({
                         </>
                     )}
                 </button>
-
-
             </div>
         </div>
     );
-
-
 };
 
 export default IDCardPreviewPanel;
